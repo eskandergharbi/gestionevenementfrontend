@@ -1,0 +1,66 @@
+<h3>Projets Existants</h3>
+<div class="p-grid">
+  <div class="p-col-12 p-md-4" *ngFor="let project of projects">
+    <div class="p-card p-mb-3">
+      <div class="p-card-header">
+        <h4>{{ project.name }}</h4>
+      </div>
+      <div class="p-card-body">
+        <p>{{ project.description }}</p>
+        <p>Status : {{ project.status | titlecase }}</p>
+        <p>Progression : {{ project.progress }}%</p>
+        <progress class="p-progressBar" [value]="project.progress" max="100"></progress>
+        <div class="p-buttonset p-mt-3">
+          <button pButton type="button" label="Supprimer" class="p-button-danger" (click)="project._id ? deleteProject(project._id) : null"></button>
+          <button pButton type="button" label="Détails" (click)="viewProjectDetails(project)"></button>
+          <button pButton type="button" label="Modifier" class="p-button-warning" (click)="editProject(project)"></button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p-dialog header="Détails du Projet" [(visible)]="displayDetailsDialog" [modal]="true" [closable]="true" [style]="{ width: '50vw' }">
+  <div *ngIf="selectedProject">
+    <h4>Nom : {{ selectedProject.name }}</h4>
+    <p>Description : {{ selectedProject.description }}</p>
+    <p>Statut : {{ selectedProject.status | titlecase }}</p>
+    <p>Progression : {{ selectedProject.progress }}%</p>
+    <h5>Membres :</h5>
+    <ul>
+      <li *ngFor="let member of selectedProject.members">{{ member }}</li>
+    </ul>
+  </div>
+</p-dialog>
+<p-dialog header="Modifier le Projet" [(visible)]="displayEditDialog" [modal]="true" [closable]="true" [style]="{ width: '50vw' }">
+  <div *ngIf="editableProject">
+    <form #editForm="ngForm">
+      <div class="p-field">
+        <label for="name">Nom</label>
+        <input id="name" type="text" [(ngModel)]="editableProject.name" name="name" class="p-inputtext p-component" required />
+      </div>
+      <div class="p-field">
+        <label for="description">Description</label>
+        <textarea id="description" [(ngModel)]="editableProject.description" name="description" class="p-inputtext p-component" required></textarea>
+      </div>
+      <div class="p-field">
+        <label for="status">Statut</label>
+        <select id="status" [(ngModel)]="editableProject.status" name="status" class="p-dropdown p-component" required>
+          <option value="not started">Not Started</option>
+          <option value="in progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="p-field">
+        <label for="progress">Progression</label>
+        <input id="progress" type="number" [(ngModel)]="editableProject.progress" name="progress" class="p-inputtext p-component" min="0" max="100" required />
+      </div>
+      <div class="p-mt-3">
+        <button pButton type="button" label="Enregistrer" class="p-button-success" (click)="saveProject(editForm)" [disabled]="!editForm.valid"></button>
+        <button pButton type="button" label="Annuler" class="p-button-secondary" (click)="displayEditDialog = false"></button>
+      </div>
+    </form>
+  </div>
+</p-dialog>
+
+<!-- Add Edit button -->

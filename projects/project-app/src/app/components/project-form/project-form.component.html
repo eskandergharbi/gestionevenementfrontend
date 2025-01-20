@@ -1,0 +1,29 @@
+<h3>Créer un Nouveau Projet</h3>
+<form (ngSubmit)="createProject()" class="p-fluid">
+  <div class="p-field">
+    <label for="name">Nom du Projet</label>
+    <input id="name" type="text" pInputText [(ngModel)]="newProject.name" name="name" required />
+  </div>
+  <div class="p-field">
+    <label for="description">Description du Projet</label>
+    <input id="description" type="text" pInputText [(ngModel)]="newProject.description" name="description" required />
+  </div>
+  <div class="p-field">
+    <label for="status">Statut</label>
+    <p-dropdown
+      [(ngModel)]="newProject.status"
+      name="status"
+      [options]="[
+        { label: 'Non commencé', value: 'not started' },
+        { label: 'En cours', value: 'in progress' },
+        { label: 'Terminé', value: 'completed' }
+      ]"
+      placeholder="Sélectionner un statut"
+    ></p-dropdown>
+  </div>
+  <div class="p-field">
+    <label for="progress">Progression (%)</label>
+    <input id="progress" type="number" pInputText [(ngModel)]="newProject.progress" name="progress" min="0" max="100" />
+  </div>
+  <button pButton type="submit" label="Créer Projet" class="p-button-success"></button>
+</form>

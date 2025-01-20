@@ -1,0 +1,61 @@
+<p-menubar [model]="menuItems">
+    <ng-template pTemplate="start">
+      <button pButton type="button" icon="pi pi-bars" class="p-button-text" (click)="toggleSidebar()"></button>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <button pButton type="button" label="Login" class="p-button-success" (click)="redirectToLogin()"></button>
+    </ng-template>
+  </p-menubar>
+  
+  
+  <p-sidebar [(visible)]="visibleSidebar" [position]="'left'" [baseZIndex]="10000">
+    <div class="p-d-flex p-ai-center p-jc-between">
+      <h2 class="p-m-0">Menu</h2>
+      <button
+        pButton
+        icon="pi pi-times"
+        class="p-button-rounded p-button-text"
+        (click)="visibleSidebar = false"
+      ></button>
+    </div>
+    <hr />
+    <ul class="menu-list">
+      <li class="menu-item">
+        <a (click)="redirectToLogin()">
+          <i class="pi pi-home"></i> Home
+        </a>
+      </li>
+      <li class="menu-item">
+        <a (click)="loadMicrofrontend('collaboration-app')">
+          <i class="pi pi-comments"></i> Chat
+        </a>
+      </li>
+      <li class="menu-item">
+        <a (click)="loadMicrofrontend('report-app')">
+          <i class="pi pi-chart-line"></i> Reports
+        </a>
+      </li>
+      <li class="menu-item">
+        <a (click)="loadMicrofrontend('task-app')">
+          <i class="pi pi-check-square"></i> Tasks
+        </a>
+      </li>
+      <li class="menu-item">
+        <a (click)="loadMicrofrontend('project-app')">
+          <i class="pi pi-folder"></i> Projects
+        </a>
+      </li>
+    </ul>
+    <hr />
+    <button
+      pButton
+      type="button"
+      label="Close"
+      class="p-button-danger p-mt-2"
+      (click)="visibleSidebar = false"
+    ></button>
+  </p-sidebar>
+  
+  <!-- Main Content -->
+  <div class="content">
+  </div>

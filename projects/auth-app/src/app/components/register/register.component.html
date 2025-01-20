@@ -1,0 +1,35 @@
+<div class="p-fluid p-formgrid p-grid">
+  <h2>Register</h2>
+  <form (ngSubmit)="register()" class="p-col-12">
+    <div class="p-field p-col-12 p-md-6">
+      <label for="firstName">FirstName</label>
+      <input id="firstName" type="text" pInputText [(ngModel)]="firstName" name="firstName" placeholder="First Name" required />
+    </div>
+    <div class="p-field p-col-12 p-md-6">
+      <label for="lastName">LastName</label>
+      <input id="lastName" type="text" pInputText [(ngModel)]="lastName" name="lastName" placeholder="Last Name" required />
+    </div>
+    <div class="p-field p-col-12">
+      <label for="userName">UserName</label>
+      <input id="userName" type="text" pInputText [(ngModel)]="userName" name="userName" placeholder="User  Name" required />
+    </div>
+    <div class="p-field p-col-12">
+      <label for="email">Email</label>
+      <input id="email" type="email" pInputText [(ngModel)]="email" name="email" placeholder="Email" required />
+    </div>
+    <div class="p-field p-col-12">
+      <label for="password">Password</label>
+      <input id="password" type="password" pInputText [(ngModel)]="password" name="password" placeholder="Password" required />
+    </div>
+    <div class="p-field p-col-12">
+      <label for="role">Role</label>
+      <!-- <p-dropdown [(ngModel)]="role" name="role" [options]="roles" placeholder="Select a Role"></p-dropdown> -->
+      <p-dropdown [options]="roles" [(ngModel)]="selectedRoleCode" optionLabel="name" optionValue="code"></p-dropdown>
+    </div>
+    <div class="p-field p-col-12">
+      <button pButton type="submit" label="Register"></button>
+    </div>
+    <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+  </form>
+  <a (click)="navigateToLogin()" class="signup-link" style="cursor: pointer;">Back to Login</a>
+</div>

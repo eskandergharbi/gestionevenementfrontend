@@ -1,0 +1,19 @@
+<p>details works!</p>
+<div class="p-m-3">
+    <h2>Member Details</h2>
+    <p-panel header="Member Information">
+      <div class="p-grid p-formgrid">
+        <div class="p-col-12 p-md-6">
+          <label for="name">Name</label>
+          <p>{{ member?.name }}</p>
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="email">Email</label>
+          <p>{{ member?.email }}</p>
+        </div>
+      </div>
+    </p-panel>
+  
+    <p-button label="Back" icon="pi pi-arrow-left" (click)="goBack()"></p-button>
+  </div>
+  

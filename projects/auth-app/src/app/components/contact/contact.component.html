@@ -1,0 +1,104 @@
+<div class="p-grid p-justify-center">
+    <div class="p-col-12 p-md-8">
+      <div class="card">
+        <h2 class="p-text-center p-mb-3">Contact Us</h2>
+        <form (ngSubmit)="onSubmit()" #contactForm="ngForm" class="p-fluid">
+          <!-- Name -->
+          <div class="p-field p-grid">
+            <label for="name" class="p-col-12 p-md-3">Name</label>
+            <div class="p-col-12 p-md-9">
+              <input
+                id="name"
+                type="text"
+                pInputText
+                [(ngModel)]="contact.name"
+                name="name"
+                required
+                #nameField="ngModel"
+                placeholder="Enter your name"
+                class="p-mb-2"
+              />
+              <small *ngIf="nameField.invalid && nameField.touched" class="p-error">
+                Name is required.
+              </small>
+            </div>
+          </div>
+  
+          <!-- Email -->
+          <div class="p-field p-grid">
+            <label for="email" class="p-col-12 p-md-3">Email</label>
+            <div class="p-col-12 p-md-9">
+              <input
+                id="email"
+                type="email"
+                pInputText
+                [(ngModel)]="contact.email"
+                name="email"
+                required
+                #emailField="ngModel"
+                placeholder="Enter your email"
+                class="p-mb-2"
+              />
+              <small *ngIf="emailField.invalid && emailField.touched" class="p-error">
+                A valid email is required.
+              </small>
+            </div>
+          </div>
+  
+          <!-- Subject -->
+          <div class="p-field p-grid">
+            <label for="subject" class="p-col-12 p-md-3">Subject</label>
+            <div class="p-col-12 p-md-9">
+              <input
+                id="subject"
+                type="text"
+                pInputText
+                [(ngModel)]="contact.subject"
+                name="subject"
+                required
+                #subjectField="ngModel"
+                placeholder="Enter the subject"
+                class="p-mb-2"
+              />
+              <small *ngIf="subjectField.invalid && subjectField.touched" class="p-error">
+                Subject is required.
+              </small>
+            </div>
+          </div>
+  
+          <!-- Message -->
+          <div class="p-field p-grid">
+            <label for="message" class="p-col-12 p-md-3">Message</label>
+            <div class="p-col-12 p-md-9">
+              <textarea
+                id="message"
+                rows="5"
+                pInputTextarea
+                [(ngModel)]="contact.message"
+                name="message"
+                required
+                #messageField="ngModel"
+                placeholder="Enter your message"
+                class="p-mb-2"
+              ></textarea>
+              <small *ngIf="messageField.invalid && messageField.touched" class="p-error">
+                Message is required.
+              </small>
+            </div>
+          </div>
+  
+          <!-- Submit Button -->
+          <div class="p-text-center">
+            <button
+              pButton
+              type="submit"
+              label="Submit"
+              [disabled]="contactForm.invalid"
+              class="p-button-success"
+            ></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  

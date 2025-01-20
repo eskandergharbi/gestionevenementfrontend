@@ -1,0 +1,19 @@
+<p-card header="Add a Comment">
+    <form [formGroup]="commentForm" (ngSubmit)="onSubmit()">
+        <textarea
+            pInputTextarea
+            formControlName="text"
+            rows="3"
+            placeholder="Enter your comment"
+        ></textarea>
+        <!-- <p-dropdown [options]="cities" [(ngModel)]="selectedCityCode" optionLabel="name" optionValue="code"></p-dropdown>
+        <p-dropdown [options]="cities" [(ngModel)]="selectedCityCode" optionLabel="name" optionValue="code"></p-dropdown> -->
+        <button
+            pButton
+            label="Submit"
+            icon="pi pi-check"
+            type="submit"
+            [disabled]="commentForm.invalid"
+        ></button>
+    </form>
+</p-card>

@@ -1,0 +1,6 @@
+<p-card header="Comments">
+    <div *ngFor="let comment of comments">
+        <p>{{ comment.text }}</p>
+        <button pButton label="Delete" icon="pi pi-trash" (click)="deleteComment(comment._id)"></button>
+    </div>
+</p-card>

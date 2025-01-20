@@ -1,0 +1,68 @@
+<div class="p-fluid p-grid p-justify-center">
+  <div class="p-col-12 p-md-6">
+    <div class="card">
+      <h2 class="p-text-center">Login</h2>
+      <form #loginForm="ngForm" (ngSubmit)="login()">
+        <!-- Username Input -->
+        <div class="p-field">
+          <label for="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            pInputText
+            [(ngModel)]="username"
+            name="username"
+            required
+            #usernameField="ngModel"
+            placeholder="Enter your username"
+          />
+          <small *ngIf="usernameField.invalid && usernameField.touched" class="p-error">
+            Username is required.
+          </small>
+        </div>
+
+        <!-- Password Input -->
+        <div class="p-field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            pInputText
+            [(ngModel)]="password"
+            name="password"
+            required
+            #passwordField="ngModel"
+            placeholder="Enter your password"
+          />
+          <small *ngIf="passwordField.invalid && passwordField.touched" class="p-error">
+            Password is required.
+          </small>
+        </div>
+
+        <!-- Error Message -->
+        <p *ngIf="errorMessage" class="p-error">{{ errorMessage }}</p>
+
+        <!-- Login Button -->
+        <button
+          pButton
+          type="submit"
+          label="Login"
+          [disabled]="loginForm.invalid"
+          class="p-mt-2"
+        ></button>
+      </form>
+
+      <!-- Sign Up Link -->
+      <p class="p-mt-3">
+        Don't have an account?
+        <a
+          (click)="navigateToRegister()"
+          class="signup-link"
+          style="cursor: pointer; text-decoration: underline;"
+        >
+          Sign Up
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

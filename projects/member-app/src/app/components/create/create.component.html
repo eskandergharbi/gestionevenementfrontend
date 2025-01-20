@@ -1,0 +1,18 @@
+<p-button label="Add Member" icon="pi pi-plus" (click)="openNew()"></p-button>
+
+<p-dialog [(visible)]="memberDialog" header="{{ dialogTitle }}" [modal]="true" [style]="{ width: '30vw' }">
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="name">Name</label>
+      <input id="name" type="text" pInputText [(ngModel)]="member.name" required />
+    </div>
+    <div class="p-field">
+      <label for="email">Email</label>
+      <input id="email" type="email" pInputText [(ngModel)]="member.email" required />
+    </div>
+  </div>
+  <p-footer>
+    <p-button label="Save" icon="pi pi-check" (click)="saveMember()"></p-button>
+    <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" class="p-button-secondary"></p-button>
+  </p-footer>
+</p-dialog>

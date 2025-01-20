@@ -23,5 +23,11 @@
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "src/server.ts", // Remove this if it doesn't exist
+    "src/server.ngtypecheck.ts" // Remove this if it doesn't exist
+  ]
 }

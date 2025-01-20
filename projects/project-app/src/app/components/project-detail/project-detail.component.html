@@ -1,0 +1,8 @@
+<div *ngIf="project">
+  <h3>Détails du Projet</h3>
+  <h4>{{ project.name }}</h4>
+  <p>Description : {{ project.description }}</p>
+  <p>Status : {{ project.status | titlecase }}</p>
+  <p>Progression : {{ project.progress }}%</p>
+  <progress class="p-progressBar" [value]="project.progress" max="100"></progress>
+</div>
