@@ -6,11 +6,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CreateComponent } from './create/create.component';
 import { MemberComponent } from './member/member.component';
 import { MenuComponent } from './menu/menu.component';
+import { authGuard } from '../../../../task-app/auth.guard';
 
 export const MFE1_ROUTES: Routes = [
   { path: 'menu', component: MenuComponent }, // Ensure this route is defined
   { path: 'member', component: MemberComponent }, // Ensure this route is defined
-  { path: 'create', component: CreateComponent },
+  { path: 'create', component: CreateComponent, canActivate: [authGuard] },
   { path: '', redirectTo: '/create', pathMatch: 'full' },
   { path: 'list', component: ListComponent },
   { path: 'members/:id', component: DetailsComponent }

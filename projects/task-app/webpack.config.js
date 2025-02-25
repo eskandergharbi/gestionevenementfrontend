@@ -11,9 +11,6 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       name: "task",
-      remotes: {
-        project: 'project@http://localhost:3004/remoteEntry.js', // URL du microfrontend Project
-      },
       filename: "remoteEntry.js",
       exposes: {
         './Module': './projects/task-app/src/app/task.module.ts', // Adjust the path to your module

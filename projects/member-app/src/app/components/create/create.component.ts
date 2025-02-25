@@ -36,7 +36,7 @@ export class CreateComponent implements OnInit {
   member: any = { name: '', email: '' };
   dialogTitle: string = '';
 
-  constructor(private memberService: MemberService, private messageService: MessageService) {}
+  constructor(private memberService: MemberService, private messageService: MessageService,private router:Router) {}
 
   ngOnInit(): void {
     this.loadMembers();
@@ -72,6 +72,8 @@ export class CreateComponent implements OnInit {
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Member added successfully' });
         this.loadMembers(); // Refresh the member list
         this.memberDialog = false;
+        this.router.navigate(['/list']);
+
       });
     }
   }

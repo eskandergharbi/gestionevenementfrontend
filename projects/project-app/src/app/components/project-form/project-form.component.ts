@@ -6,6 +6,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProjectService } from '../../services/project.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-project-form',
@@ -25,15 +26,22 @@ export class ProjectFormComponent {
   };
 
   @Output() projectCreated = new EventEmitter<Project>();
+  projects: Project[] | undefined;
 
-  constructor(private projectService: ProjectService) {}
+  constructor(private projectService: ProjectService, private router: Router) {}
 
   createProject(): void {
     this.projectService.createProject(this.newProject).subscribe((project: Project) => {
-      this.resetForm();
+      this.router.navigate(['/list']); // 🔥 Redirection après création
     });
   }
-
+  loadProjects(): void {
+    this.projectService.getProjects().subscribe((projects: Project[]) => {
+      this.projects = projects; // Assign the actual array of projects
+      console.log(projects);
+      
+    });
+  }
   resetForm(): void {
     this.newProject = {
       name: '',

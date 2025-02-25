@@ -23,7 +23,7 @@ export class LoginComponent{
     this.authService.login(this.username, this.password).subscribe({
       next: (response) => {
         localStorage.setItem('token', response.token); // Store JWT in local storage
-        this.router.navigate(['/auth/dashboard']); // Redirect to dashboard or home
+        this.router.navigate(['/dashboard']); // Redirect to dashboard or home
       },
       error: (error) => {
         this.errorMessage = 'Invalid credentials'; // Handle error

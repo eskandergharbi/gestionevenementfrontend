@@ -217,8 +217,9 @@
 							"projects/report-app/src/assets"
 						],
 						"styles": [
-							"projects/report-app/src/styles.css"
-						],
+							"node_modules/primeng/resources/themes/saga-blue/theme.css",
+							"node_modules/primeng/resources/primeng.min.css",
+							"node_modules/primeicons/primeicons.css"						],
 						"scripts": []
 					},
 					"configurations": {
@@ -276,8 +277,9 @@
 							"projects/report-app/src/assets"
 						],
 						"styles": [
-							"projects/report-app/src/styles.css"
-						],
+							"node_modules/primeng/resources/themes/saga-blue/theme.css",
+							"node_modules/primeng/resources/primeng.min.css",
+							"node_modules/primeicons/primeicons.css"						],
 						"scripts": []
 					}
 				}
@@ -305,8 +307,9 @@
 							"projects/task-app/src/assets"
 						],
 						"styles": [
-							"projects/task-app/src/styles.css"
-						],
+							"node_modules/primeng/resources/themes/saga-blue/theme.css",
+							"node_modules/primeng/resources/primeng.min.css",
+							"node_modules/primeicons/primeicons.css"						],
 						"scripts": []
 					},
 					"configurations": {
@@ -364,8 +367,9 @@
 							"projects/task-app/src/assets"
 						],
 						"styles": [
-							"projects/task-app/src/styles.css"
-						],
+							"node_modules/primeng/resources/themes/saga-blue/theme.css",
+							"node_modules/primeng/resources/primeng.min.css",
+							"node_modules/primeicons/primeicons.css"						],
 						"scripts": []
 					}
 				}
@@ -489,11 +493,11 @@
 							"projects/collaboration-app/src/assets"
 						],
 						"styles": [
-							"projects/collaboration-app/src/styles.css"
+"node_modules/primeng/resources/themes/saga-blue/theme.css",
+							"node_modules/primeng/resources/primeng.min.css",
+							"node_modules/primeicons/primeicons.css"								
 						],
-						"scripts": [],
-						"server": "projects/collaboration-app/src/main.server.ts",
-						"prerender": true
+						"scripts": []
 					},
 					"configurations": {
 						"production": {
@@ -520,6 +524,9 @@
 					"defaultConfiguration": "production"
 				},
 				"serve": {
+					"options": {
+						"proxyConfig": "proxy.conf.json"
+					  },
 					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
@@ -550,8 +557,9 @@
 							"projects/collaboration-app/src/assets"
 						],
 						"styles": [
-							"projects/collaboration-app/src/styles.css"
-						],
+"node_modules/primeng/resources/themes/saga-blue/theme.css",
+							"node_modules/primeng/resources/primeng.min.css",
+							"node_modules/primeicons/primeicons.css"							],
 						"scripts": []
 					}
 				}

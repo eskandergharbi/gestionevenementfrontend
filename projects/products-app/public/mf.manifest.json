@@ -1,8 +1,0 @@
-{
-	"hostApp": "http://localhost:3000/remoteEntry.js",
-	"authApp": "http://localhost:1000/remoteEntry.js",
-	"collaborationApp": "http://localhost:2000/remoteEntry.js",
-	"reportApp": "http://localhost:4000/remoteEntry.js",
-	"taskApp": "http://localhost:6000/remoteEntry.js",
-	"projectApp": "http://localhost:4000/remoteEntry.js"
-}

@@ -1,0 +1,59 @@
+
+<h3>Créer une Nouvelle Tâche</h3>
+<form (ngSubmit)="createTask()" class="p-fluid">
+  <!-- Title -->
+  <div class="p-field">
+    <label for="title">Titre de la Tâche</label>
+    <input id="title" type="text" pInputText [(ngModel)]="newTask.title" name="title" required />
+  </div>
+
+  <!-- Description -->
+  <div class="p-field">
+    <label for="description">Description</label>
+    <input id="description" type="text" pInputText [(ngModel)]="newTask.description" name="description" required />
+  </div>
+
+  <!-- Assigned To -->
+  <div class="p-field">
+    <label for="assignedTo">Assignée à</label>
+    <p-dropdown name="assignedTo" [options]="userOptions" [(ngModel)]="newTask.assignedTo" optionLabel="name" optionValue="_id"></p-dropdown>
+  </div>
+
+  <!-- Project -->
+  <div class="p-field">
+    <label for="project">Projet</label>
+    <p-dropdown [options]="projectOptions" name="project" [(ngModel)]="newTask.project" optionLabel="name" optionValue="_id"></p-dropdown>
+  </div>
+
+  <!-- Status -->
+  <div class="p-field">
+    <label for="status">Statut</label>
+    <p-dropdown [options]="[
+    { label: 'Non commencé', value: 'not started' },
+    { label: 'En cours', value: 'in progress' },
+    { label: 'Terminé', value: 'completed' }
+  ]"
+     name="status" [(ngModel)]="newTask.status" optionLabel="label" optionValue="value"></p-dropdown>
+
+  </div>
+
+  <!-- Priority -->
+  <div class="p-field">
+    <label for="priority">Priorité</label>
+    <p-dropdown
+      id="priority"
+      [(ngModel)]="newTask.priority"
+      name="priority"
+      [options]="[
+        { label: 'Basse', value: 'low' },
+        { label: 'Moyenne', value: 'medium' },
+        { label: 'Haute', value: 'high' }
+      ]"
+      placeholder="Sélectionner une priorité"
+      required
+    ></p-dropdown>
+  </div>
+
+  <!-- Submit Button -->
+  <button pButton type="submit" label="Créer Tâche" class="p-button-success"></button>
+</form>

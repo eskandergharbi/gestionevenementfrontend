@@ -1,0 +1,19 @@
+<button (click)="exporterPDF()" class="export-button">Exporter en PDF</button>
+
+<div class="dashboard-container">
+
+  <!-- Conteneur pour l'export PDF -->
+  <div #dashboardContent id="dashboardContent">
+      <!-- PieCharts des projets -->
+      <div *ngFor="let proj of projectChartsData; let i = index" class="chart-container">
+          <h3>{{ proj.name }}</h3>
+          <p-chart type="pie" [data]="projectChartsData[i]" [options]="chartOptions"></p-chart>
+      </div>
+
+      <!-- PieChart global pour toutes les tâches -->
+      <div class="chart-container">
+          <h3>Statistiques globales des tâches</h3>
+          <p-chart type="pie" [data]="globalChartData" [options]="chartOptions"></p-chart>
+      </div>
+  </div>
+</div>

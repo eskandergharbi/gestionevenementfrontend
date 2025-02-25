@@ -26,7 +26,7 @@ import { MessageService } from 'primeng/api';
     InputTextModule,
     ButtonModule,
     DropdownModule,
-    CardModule, // Ensure CardModule is imported
+    CardModule// Ensure CardModule is imported
 
        ],
      providers: [MessageService],// add it here

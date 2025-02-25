@@ -1,0 +1,29 @@
+.comment-form-container {
+    width: 600px; /* Adjust as needed */
+    margin: 20px auto; /* Center the form */
+  }
+  
+  .comment-form .p-field .p-field-label {
+    font-weight: bold; /* Make labels bolder */
+    margin-bottom: 5px; /* Add some spacing below the label */
+  }
+  
+  .comment-form .p-dropdown,
+  .comment-form textarea {
+    width: 100%; /* Ensure full width for form elements */
+  }
+  
+  .comment-form .p-error {
+    margin-top: 5px;
+  }
+  
+  .button-group {
+    display: flex; /* Arrange buttons horizontally */
+    justify-content: flex-end; /* Align buttons to the right */
+    margin-top: 10px;
+  }
+  
+  .required-indicator {
+    color: red;
+    margin-left: 3px;
+  }

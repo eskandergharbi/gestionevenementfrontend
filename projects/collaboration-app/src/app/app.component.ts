@@ -1,34 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ChatService } from './chat.service';
+import { ChatComponent } from './components/chat/chat.component';
+import { FileUploadComponent } from './components/file-upload/file-upload.component';
+import { MenuComponent } from './components/menu/menu.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet,ChatComponent,MenuComponent],
+  standalone:true,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent implements OnInit{
-  messages: any[] = [];
-  newMessage: string = '';
-  currentProjectId: any = '';
-
-  constructor(private chatService: ChatService) {}
-
-  ngOnInit() {
-  }
-
-  loadMessages(projectId: string): void {
-    this.currentProjectId = projectId;
-    this.chatService.getMessages(this.currentProjectId).subscribe((data) => {
-      this.messages = data;
-    });
-  }
-
-  sendMessage(): void {
-    this.chatService.sendMessage(this.currentProjectId, this.newMessage).subscribe((message) => {
-      this.messages.push(message);
-      this.newMessage = ''; // Clear input
-    });
-  }
-  }
+export class AppComponent{}

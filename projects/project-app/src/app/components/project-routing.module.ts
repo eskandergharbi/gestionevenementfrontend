@@ -6,11 +6,12 @@ import { MenuComponent } from './menu/menu.component';
 import { ProjectListComponent } from './project-list/project-list.component';
 import { ProjectFormComponent } from './project-form/project-form.component';
 import { ProjectDetailComponent } from './project-detail/project-detail.component';
+import { authGuard } from '../../../../task-app/auth.guard';
 
 
 export const MFE1_ROUTES: Routes = [
    { path: 'list', component: ProjectListComponent },
-   { path: 'create', component: ProjectFormComponent },
+   { path: 'create', component: ProjectFormComponent, canActivate: [authGuard] },
    { path: 'details', component: ProjectDetailComponent },
    { path: 'menu', component: MenuComponent }
 ]
