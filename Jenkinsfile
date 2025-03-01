@@ -1,19 +1,27 @@
 pipeline {
-    agent any
+    agent {
+        label 'docker'  // Utilisation d'un label si Docker est installé sur un agent Jenkins spécifique
+    }
 
     environment {
         DOCKER_HUB_USERNAME = "eskandergharbi"
-        DOCKER_HUB_PASSWORD = credentials('docker-hub-password') // Stocké dans Jenkins
-        HEROKU_API_KEY = credentials('heroku-api-key') // Stocké dans Jenkins
+        DOCKER_HUB_PASSWORD = credentials('docker-hub-password') // Credentials Jenkins
+        HEROKU_API_KEY = credentials('heroku-api-key') // Credentials Jenkins
         HEROKU_APP_FRONTEND = "nom-de-votre-app-frontend"
     }
 
     stages {
-        stage('Cloner le dépôt Frontend') {
+        stage('Mettre à jour le dépôt Frontend') {
             steps {
                 script {
-                    // Cloner uniquement le dépôt Frontend
-                    sh 'git clone https://github.com/eskandergharbi/projetfederateurfrontend.git frontend'
+                    if (fileExists('frontend/.git')) {
+                        dir('frontend') {
+                            sh 'git reset --hard'
+                            sh 'git pull origin main'
+                        }
+                    } else {
+                        sh 'git clone https://github.com/eskandergharbi/projetfederateurfrontend.git frontend'
+                    }
                 }
             }
         }
@@ -22,8 +30,8 @@ pipeline {
             steps {
                 script {
                     dir('frontend') {
-                        sh 'npm install'
-                        sh 'npm run test -- --watch=false --browsers=ChromeHeadless' // Exécute les tests unitaires Angular
+                        sh 'npm install'  // Installer les dépendances via npm
+                        sh 'npm run test -- --watch=false --browsers=ChromeHeadless'  // Lancer les tests unitaires Angular
                     }
                 }
             }
