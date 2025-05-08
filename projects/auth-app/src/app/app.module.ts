@@ -1,33 +1,38 @@
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { routes, AppRoutingModule } from './app.routes';
+import { AppRoutingModule, routes } from './app.routes';
+
 import { SidebarModule } from 'primeng/sidebar';
 import { ButtonModule } from 'primeng/button';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MenubarModule } from 'primeng/menubar';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { DropdownModule } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
+import { KeycloakService } from './services/keycloak.service';
 
+// Initialization function
+export function initializeKeycloak(keycloak: KeycloakService) {
+  return () => keycloak.init();
+}
 
 @NgModule({
+  declarations: [
+  ],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(routes),
-    BrowserModule,
+    RouterModule.forRoot((routes)
+  ),
+    AppRoutingModule,
     ButtonModule,
     SidebarModule,
     BrowserAnimationsModule,
-    MenubarModule, // Add this
-    HttpClientModule,
-    AppRoutingModule, // Add your routing module here
-    RouterModule, 
+    MenubarModule,
     DropdownModule,
-    CardModule// Import RouterModule 
+    CardModule
   ],
-  declarations: [],
-  providers: [HttpClient],
-  bootstrap: []
+  providers: [
+  ],
+  bootstrap: [] // 👈 Bootstrap your root component
 })
-export class AppModule { }
+export class AppModule {}

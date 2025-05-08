@@ -1,8 +1,19 @@
-<div class="chat-container">
-  <h2>Chat App</h2>
-  <div class="messages">
-    <div *ngFor="let message of messages" class="message">{{ message }}</div>
+<div *ngIf="!connected">
+  <input [(ngModel)]="username" placeholder="Enter your username" />
+  <button (click)="connect()">Join Chat</button>
+</div>
+
+<div *ngIf="connected">
+  <div class="chat-box">
+    <div *ngFor="let msg of messages">
+      <strong *ngIf="msg.type === 'JOIN' || msg.type === 'LEAVE'">
+        [{{ msg.type }}] {{ msg.sender }}
+      </strong>
+      <div *ngIf="msg.type === 'CHAT'">
+        <b>{{ msg.sender }}:</b> {{ msg.content }}
+      </div>
+    </div>
   </div>
-  <input [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
+  <input [(ngModel)]="message" placeholder="Type a message" (keyup.enter)="sendMessage()" />
   <button (click)="sendMessage()">Send</button>
 </div>

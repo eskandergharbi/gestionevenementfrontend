@@ -1,0 +1,12 @@
+.event-dialog {
+    width: 500px;
+    height: 700px;
+  }
+  
+  /* Optional: Add more styles for responsiveness */
+  @media (max-width: 600px) {
+    .event-dialog {
+      width: 90%; /* Adjust for smaller screens */
+      height: auto; /* Allow height to adjust */
+    }
+  }

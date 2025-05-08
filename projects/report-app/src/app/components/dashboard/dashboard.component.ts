@@ -25,7 +25,7 @@ interface TaskStats {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, CommonModule, ChartModule,RouterOutlet],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, ChartModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

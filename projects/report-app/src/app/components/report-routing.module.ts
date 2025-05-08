@@ -2,17 +2,16 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { ReactiveFormsModule } from '@angular/forms';
-import { DashboardComponent } from './dashboard/dashboard.component';
-import { authGuard } from '../../../../task-app/auth.guard';
-import { LoginComponent } from '../../../../auth-app/src/app/components/login/login.component';
+import { EventCountListComponent } from './event-count-list/event-count-list.component';
 
 
 
 
 export const MFE1_ROUTES: Routes = [
-   { path: 'dashboard', component: DashboardComponent , canActivate: [authGuard]},
-      { path: 'login', component: LoginComponent }
-   
+
+  { path: 'count', component: EventCountListComponent },
+  { path: '', redirectTo: 'count', pathMatch: 'full' }, // redirection par défaut (optionnel)
+  { path: '**', redirectTo: 'count' } // gestion des routes inconnues   
 ]
 
 @NgModule({

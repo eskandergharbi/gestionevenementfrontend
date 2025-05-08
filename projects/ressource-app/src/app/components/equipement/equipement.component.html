@@ -1,0 +1,131 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-toolbar>
+  <div class="p-toolbar-group-left">
+    <button *ngIf="hasRole('Admin')" pButton label="New Equipement" icon="pi pi-plus" class="p-button-success" (click)="openNew()"></button>
+  </div>
+</p-toolbar>
+
+<p-table [value]="equipements" [paginator]="true" [rows]="5">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-equipement>
+    <tr>
+      <td>{{ equipement.nom }}</td>
+      <td>{{ equipement.quantite }}</td>
+      <td>
+        <button
+          pButton
+          icon="pi pi-pencil"
+          class="p-button-rounded p-button-warning"
+          (click)="editEquipement(equipement)"
+        ></button>
+        <button
+          pButton
+          icon="pi pi-trash"
+          class="p-button-rounded p-button-danger"
+          (click)="deleteEquipement(equipement)"
+        ></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- Dialog de création/modification -->
+<p-dialog
+  [(visible)]="equipementDialog"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '400px' }"
+>
+  <ng-template pTemplate="header">
+    <h3>{{ equipement.id ? 'Edit' : 'Create' }} Equipement</h3>
+  </ng-template>
+
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="nom">Name</label>
+      <input
+        id="nom"
+        type="text"
+        pInputText
+        [(ngModel)]="equipement.nom"
+        placeholder="Equipement name"
+        required
+      />
+    </div>
+
+    <div class="p-field">
+      <label for="quantite">Quantity</label>
+      <p-inputNumber
+        id="quantite"
+        [(ngModel)]="equipement.quantite"
+        placeholder="Quantity"
+      ></p-inputNumber>
+    </div>
+
+    <!-- Room Dropdown -->
+    <div class="p-field p-fluid">
+      <label for="salle">Room</label>
+      <p-dropdown
+        id="salle"
+        [options]="salles"
+        [(ngModel)]="equipement.salleid"
+        optionLabel="nom"
+        optionValue="id"
+        placeholder="Select room"
+        required
+        appendTo="body"
+        [autoZIndex]="true"
+        [baseZIndex]="1000"
+      >
+        <ng-template let-salle pTemplate="item">
+          <div class="p-d-flex p-ai-center p-jc-between">
+            <span>{{ salle.nom }}</span>
+            <small class="text-muted">({{ salle.capacite }} places)</small>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </div>
+
+    <!-- Reservation Dropdown -->
+    <div class="p-field">
+      <label for="reservation">Reservation</label>
+      <p-dropdown
+        id="reservation"
+        [options]="reservations"
+        [(ngModel)]="equipement.reservationid"
+        optionLabel="description"
+        optionValue="id"
+        placeholder="Select reservation"
+        [disabled]="!reservations || reservations.length === 0"
+        required
+        appendTo="body"
+        [autoZIndex]="true"
+        [baseZIndex]="1000"
+      >
+        <ng-template let-reservation pTemplate="item">
+          <div class="p-d-flex p-ai-center p-jc-between">
+            <span>{{ reservation.description }}</span>
+            <small class="text-muted">
+              From {{ reservation.startTime | date:'short' }} to {{ reservation.endTime | date:'short' }}
+            </small>
+          </div>
+        </ng-template>
+      </p-dropdown>
+
+      <p *ngIf="reservations.length === 0" class="text-muted">No reservations available</p>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button *ngIf="hasRole('Admin')" pButton label="Cancel" icon="pi pi-times" (click)="hideDialog()"></button>
+    <button *ngIf="hasRole('Admin')" pButton label="Save" icon="pi pi-check" (click)="saveEquipement()"></button>
+  </ng-template>
+</p-dialog>

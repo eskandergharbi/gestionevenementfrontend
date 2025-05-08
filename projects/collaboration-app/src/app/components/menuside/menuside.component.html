@@ -1,0 +1,29 @@
+<div class="card flex justify-content-start">
+    <p-sidebar [(visible)]="sidebarVisible">
+      <ng-template pTemplate="header">
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-user"></i>
+          <span class="font-bold">Mon Menu</span>
+        </div>
+      </ng-template>
+  
+      <ul class="list-none p-0 m-0">
+        <li class="mb-2">
+          <a [routerLink]="'/chat'" class="flex align-items-center gap-2 p-2 border-round hover:surface-200 cursor-pointer">
+            <i class="pi pi-users"></i>
+            <span>Liste des membres</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="'/announcement'" class="flex align-items-center gap-2 p-2 border-round hover:surface-200 cursor-pointer">
+            <i class="pi pi-calendar-plus"></i>
+            <span>Inscription</span>
+          </a>
+        </li>
+      </ul>
+    </p-sidebar>
+  
+    <p-button (onClick)="sidebarVisible = true" icon="pi pi-bars" label="Menu" class="p-button-outlined" />
+  </div>
+  
+  

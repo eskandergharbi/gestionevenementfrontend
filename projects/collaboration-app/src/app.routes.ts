@@ -4,7 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 export const routes: Routes = [  {
     path: 'collaboration',
-    loadChildren: () => import('../src/app/components/collaboration.module').then(m => m.CollaborationModule) // Lazy load AuthModule
+    loadChildren: () => import('./app/components/Communication.module').then(m => m.CommunicationModule) // Lazy load AuthModule
   }
 ];
 

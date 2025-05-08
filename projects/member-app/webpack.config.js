@@ -17,9 +17,9 @@ module.exports = {
         './Module': './projects/member-app/src/app/components/member.module.ts', // Adjust the path to your module
       },
       shared: {
-        "@angular/core": { singleton: true, strictVersion: true,eager:true },
-        "@angular/common": { singleton: true, strictVersion: true,eager:true },
-        "rxjs": { singleton: true, strictVersion: true,eager:true }
+        "@angular/core": { singleton: true, strictVersion: true},
+        "@angular/common": { singleton: true, strictVersion: true},
+        "rxjs": { singleton: true, strictVersion: true}
       },
     }),
   ],

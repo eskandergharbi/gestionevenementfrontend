@@ -1,44 +1,52 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import KeycloakService from '../../host-app/src/app/shared/keycloak.service';
+
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class MemberService {
-  private baseUrl = 'http://localhost:3003/api/members';
+  private apiUrl = 'http://localhost:8088/api/users';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private keycloakService: KeycloakService
+  ) {}
 
-  getAllMembers(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.get<any[]>(this.baseUrl, { headers });
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.keycloakService.getToken();
+    console.log(token);
+    
+    return new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
   }
 
-  getMemberById(id: string): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.get<any>(`${this.baseUrl}/${id}`, { headers });
+  getUsers(): Observable<{ content: User[] }> {
+    return this.http.get<{ content: User[] }>(this.apiUrl, { headers: this.getAuthHeaders() });
   }
 
-  createMember(member: any): Observable<any> {
-        const token = localStorage.getItem('token');
-        console.log("t",token);
-        
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.post<any>(this.baseUrl, member, { headers });
+  getUserById(id: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 
-  updateMember(id: string, member: any): Observable<any> {
-        const token = localStorage.getItem('token');
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.put<any>(`${this.baseUrl}/${id}`, member, { headers });
+  createUser(user: User): Observable<User> {
+    return this.http.post<User>(this.apiUrl, user, { headers: this.getAuthHeaders() });
   }
 
-  deleteMember(id: string): Observable<any> {
-        const token = localStorage.getItem('token');
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.delete<any>(`${this.baseUrl}/${id}`, { headers });
+  updateUser(id: string, user: User): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}`, user, { headers: this.getAuthHeaders() });
+  }
+
+  deleteUser(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 }

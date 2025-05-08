@@ -1,18 +1,33 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideClientHydration } from '@angular/platform-browser';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter, RouterModule } from '@angular/router';
 import { AppComponent } from './app/app.component';
-import { importProvidersFrom } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // Import this module
-import { RouterModule } from '@angular/router';
-import { MFE1_ROUTES } from './app/components/collaboration-routing.module';
+import { KeycloakService } from '../../host-app/src/app/shared/keycloak.service';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura'; // add this
+import { routes } from './app.routes';
+import { MFE1_ROUTES } from './app/components/Communication-routing.module';
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideClientHydration(),
-    importProvidersFrom(HttpClientModule), // Add this line
-	importProvidersFrom(BrowserAnimationsModule), // Add this line
-  importProvidersFrom(RouterModule.forRoot(MFE1_ROUTES))
+const keycloakService = new KeycloakService();
 
-  ],
-}).catch(err => console.error(err));
+keycloakService.init().then(() => {
+  bootstrapApplication(AppComponent, {
+    providers: [
+      provideZoneChangeDetection({ eventCoalescing: true }),
+      provideRouter(routes),
+      provideAnimationsAsync(),  // add this
+      providePrimeNG({           // add this
+        theme: {                 // add this
+          preset: Aura,          // add this
+        },                       // add this
+      }),                
+      provideAnimations(),
+      provideHttpClient(),
+      importProvidersFrom(RouterModule.forRoot(MFE1_ROUTES)),
+      { provide: KeycloakService, useValue: keycloakService }
+    ]
+  }).catch(err => console.error(err));
+});

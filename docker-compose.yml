@@ -1,0 +1,5 @@
+services:
+  docker run -d -p 8080:8080 --name keycloak \
+  -e KEYCLOAK_USER=admin \
+  -e KEYCLOAK_PASSWORD=admin \
+  jboss/keycloak

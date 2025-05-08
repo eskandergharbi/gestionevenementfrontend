@@ -7,7 +7,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SidebarModule } from 'primeng/sidebar';
 import { MenubarModule } from 'primeng/menubar';
 import { ButtonModule } from 'primeng/button';
-import {  HttpClientModule } from '@angular/common/http';
 
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
@@ -17,7 +16,6 @@ import { CardModule } from 'primeng/card'; // Import CardModule
   imports: [
     CommonModule,
     FormsModule,
-    HttpClientModule,
     RouterModule,
     BrowserAnimationsModule,
     SidebarModule,

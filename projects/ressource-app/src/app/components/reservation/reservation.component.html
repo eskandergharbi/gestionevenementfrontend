@@ -1,0 +1,90 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-toolbar>
+  <div class="p-toolbar-group-left">
+    <button *ngIf="hasRole('Admin')" pButton label="Nouvelle réservation" icon="pi pi-plus" class="p-button-success" (click)="openNew()"></button>
+  </div>
+</p-toolbar>
+
+<p-table [value]="reservations" [paginator]="true" [rows]="5">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>ID</th>
+      <th>Début</th>
+      <th>Fin</th>
+      <th>Salle</th>
+      <th>Equipements</th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-reservation>
+    <tr>
+      <td>{{ reservation.id }}</td>
+      <td>{{ reservation.startTime | date:'short' }}</td>
+      <td>{{ reservation.endTime | date:'short' }}</td>
+      <td>{{ reservation?.salle?.nom || 'Non attribuée' }}</td>
+      <td>
+        <p-dropdown
+          [options]="reservation.equipements"
+          [(ngModel)]="reservation.equipements"
+          optionLabel="nom"
+          placeholder="Sélectionner un équipement"
+          [disabled]="true"> <!-- Balise fermée correctement ici -->
+        </p-dropdown>
+      </td>
+      <td>
+        <button *ngIf="hasRole('Admin')"  pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning" (click)="editReservation(reservation)"></button>
+        <button *ngIf="hasRole('Admin')" pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="deleteReservation(reservation)"></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+
+
+<p-dialog [(visible)]="reservationDialog" [modal]="true" [closable]="false">
+  <ng-template pTemplate="header">
+    <h3>{{ reservation.id ? 'Modifier' : 'Créer' }} une réservation</h3>
+  </ng-template>
+  <div class="p-field">
+    <label for="description">Description</label>
+    <input
+      id="description"
+      type="text"
+      pInputText
+      [(ngModel)]="reservation.idescription"
+      placeholder="description"
+      required
+    />
+  </div>
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="startTime">Début</label>
+      <input id="startTime" type="datetime-local" [(ngModel)]="reservation.startTime" required />
+    </div>
+
+    <div class="p-field">
+      <label for="endTime">Fin</label>
+      <input id="endTime" type="datetime-local" [(ngModel)]="reservation.endTime" required />
+    </div>
+
+    <div class="p-field">
+      <label for="salle">Salle</label>
+      <p-dropdown
+        id="salle"
+        [options]="salles"
+        [(ngModel)]="reservation.salle"
+        optionLabel="nom"
+        placeholder="Choisir une salle"
+        required
+      ></p-dropdown>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler" icon="pi pi-times" (click)="hideDialog()"></button>
+    <button pButton label="Enregistrer" icon="pi pi-check" (click)="saveReservation()"></button>
+  </ng-template>
+</p-dialog>

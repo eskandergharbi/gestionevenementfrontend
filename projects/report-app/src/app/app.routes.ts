@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ReportModule } from './report.module';
+import { ReportModule } from './app.module';
 
 export const routes: Routes = [  {
     path: 'report',

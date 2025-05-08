@@ -9,6 +9,7 @@ module.exports = {
     extensions: [".js", ".json", ".ts", ".html"],
   },
   plugins: [
+    
     new ModuleFederationPlugin({
       name: "collaboration",
       filename: "remoteEntry.js",

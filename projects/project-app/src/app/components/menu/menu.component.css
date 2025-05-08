@@ -1,8 +1,0 @@
-.signup-link {
-    color: blue;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  :host ::ng-deep button {
-    margin-right: .25em;
-}

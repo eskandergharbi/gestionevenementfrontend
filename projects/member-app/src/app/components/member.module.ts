@@ -13,7 +13,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CardModule } from 'primeng/card'; // Import CardModule
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { MemberRoutingModule } from './member-routing.module';
-import { MemberComponent } from './member/member.component';
 import { DialogModule } from 'primeng/dialog';
 @NgModule({
   declarations: [],
@@ -22,18 +21,14 @@ import { DialogModule } from 'primeng/dialog';
     FormsModule,
     RouterModule,
     MemberRoutingModule,
-    BrowserAnimationsModule,
     SidebarModule,
     MenubarModule,
     InputTextModule,
     ButtonModule,
     DropdownModule,
-    CardModule, // Ensure CardModule is imported
-    MemberComponent,
-    DialogModule,
+    CardModule, // Ensure CardModule is imported    DialogModule,
     PanelModule,
-    ConfirmDialogModule,
-
+    ConfirmDialogModule
        ],
      providers: [MessageService,ConfirmationService]// add it here
 

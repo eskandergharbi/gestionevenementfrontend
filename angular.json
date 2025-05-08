@@ -87,8 +87,6 @@
 						],
 						"styles": [
 							"projects/host-app/src/styles.css",
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
 							"node_modules/primeicons/primeicons.css",
 							"src/styles.css"
 						],
@@ -124,9 +122,8 @@
 							"projects/auth-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
 						],
 						"scripts": []
 					},
@@ -171,7 +168,6 @@
 					"options": {
 						"buildTarget": "auth-app:build",
 						"proxyConfig": "proxy.conf.json"
-
 					}
 				},
 				"test": {
@@ -217,9 +213,9 @@
 							"projects/report-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"						],
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
+						],
 						"scripts": []
 					},
 					"configurations": {
@@ -277,9 +273,8 @@
 							"projects/report-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"						],
+							"node_modules/primeicons/primeicons.css"
+						],
 						"scripts": []
 					}
 				}
@@ -307,9 +302,9 @@
 							"projects/task-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"						],
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
+						],
 						"scripts": []
 					},
 					"configurations": {
@@ -367,45 +362,39 @@
 							"projects/task-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"						],
+							"node_modules/primeicons/primeicons.css"
+						],
 						"scripts": []
 					}
 				}
 			}
 		},
-		"project-app": {
+		"ressource-app": {
 			"projectType": "application",
-			"schematics": {
-				"@schematics/angular:component": {
-					"style": "scss"
-				}
-			},
-			"root": "projects/project-app",
-			"sourceRoot": "projects/project-app/src",
+			"schematics": {},
+			"root": "projects/ressource-app",
+			"sourceRoot": "projects/ressource-app/src",
 			"prefix": "app",
 			"architect": {
 				"build": {
 					"builder": "@angular-devkit/build-angular:browser",
 					"options": {
-						"outputPath": "dist/project-app",
-						"index": "projects/project-app/src/index.html",
-						"main": "projects/project-app/src/main.ts",
+						"outputPath": "dist/ressource-app",
+						"index": "projects/ressource-app/src/index.html",
+						"main": "projects/ressource-app/src/main.ts",
 						"polyfills": [
 							"zone.js"
 						],
-						"tsConfig": "projects/project-app/tsconfig.app.json",
+						"tsConfig": "projects/ressource-app/tsconfig.app.json",
 						"inlineStyleLanguage": "scss",
 						"assets": [
-							"projects/project-app/src/favicon.ico",
-							"projects/project-app/src/assets"
+							"projects/ressource-app/src/favicon.ico",
+							"projects/ressource-app/src/assets"
 						],
-						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"
-						],
+		"styles": [
+			"node_modules/primeicons/primeicons.css",
+			"node_modules/primeflex/primeflex.css"
+],
 						"scripts": []
 					},
 					"configurations": {
@@ -436,10 +425,10 @@
 					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "project-app:build:production"
+							"buildTarget": "ressource-app:build:production"
 						},
 						"development": {
-							"buildTarget": "project-app:build:development"
+							"buildTarget": "ressource-app:build:development"
 						}
 					},
 					"defaultConfiguration": "development"
@@ -447,7 +436,7 @@
 				"extract-i18n": {
 					"builder": "@angular-devkit/build-angular:extract-i18n",
 					"options": {
-						"buildTarget": "project-app:build"
+						"buildTarget": "ressource-app:build"
 					}
 				},
 				"test": {
@@ -457,15 +446,14 @@
 							"zone.js",
 							"zone.js/testing"
 						],
-						"tsConfig": "projects/project-app/tsconfig.spec.json",
+						"tsConfig": "projects/ressource-app/tsconfig.spec.json",
 						"inlineStyleLanguage": "scss",
 						"assets": [
-							"projects/project-app/src/favicon.ico",
-							"projects/project-app/src/assets"
+							"projects/ressource-app/src/favicon.ico",
+							"projects/ressource-app/src/assets"
 						],
 						"styles": [
-							"projects/project-app/src/styles.css"
-						],
+													],
 						"scripts": []
 					}
 				}
@@ -493,9 +481,8 @@
 							"projects/collaboration-app/src/assets"
 						],
 						"styles": [
-"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"								
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
 						],
 						"scripts": []
 					},
@@ -526,7 +513,7 @@
 				"serve": {
 					"options": {
 						"proxyConfig": "proxy.conf.json"
-					  },
+					},
 					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
@@ -557,40 +544,40 @@
 							"projects/collaboration-app/src/assets"
 						],
 						"styles": [
-"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"							],
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
+						],
 						"scripts": []
 					}
 				}
 			}
 		},
-		"comment-app": {
+		"event-app": {
 			"projectType": "application",
 			"schematics": {},
-			"root": "projects/comment-app",
-			"sourceRoot": "projects/comment-app/src",
+			"root": "projects/event-app",
+			"sourceRoot": "projects/event-app/src",
 			"prefix": "app",
 			"architect": {
 				"build": {
 					"builder": "@angular-devkit/build-angular:browser",
 					"options": {
-						"outputPath": "dist/comment-app",
-						"index": "projects/comment-app/src/index.html",
+						"outputPath": "dist/event-app",
+						"index": "projects/event-app/src/index.html",
 						"polyfills": [
 							"zone.js"
 						],
-						"tsConfig": "projects/comment-app/tsconfig.app.json",
+						"tsConfig": "projects/event-app/tsconfig.app.json",
 						"assets": [
-							"projects/comment-app/src/favicon.ico",
-							"projects/comment-app/src/assets"
+							"projects/event-app/src/favicon.ico",
+							"projects/event-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"						],
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"	
+						],
 						"scripts": [],
-						"main": "projects/comment-app/src/main.ts",
+						"main": "projects/event-app/src/main.ts",
 						"commonChunk": false
 					},
 					"configurations": {
@@ -621,25 +608,25 @@
 					"builder": "ngx-build-plus:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "comment-app:build:production",
-							"extraWebpackConfig": "projects/comment-app/webpack.prod.config.js"
+							"buildTarget": "event-app:build:production",
+							"extraWebpackConfig": "projects/event-app/webpack.prod.config.js"
 						},
 						"development": {
-							"buildTarget": "comment-app:build:development"
+							"buildTarget": "event-app:build:development"
 						}
 					},
 					"defaultConfiguration": "development",
 					"options": {
 						"port": 5000,
 						"publicHost": "http://localhost:5000",
-						"extraWebpackConfig": "projects/comment-app/webpack.config.js"
+						"extraWebpackConfig": "projects/event-app/webpack.config.js"
 					}
 				},
 				"extract-i18n": {
 					"builder": "ngx-build-plus:extract-i18n",
 					"options": {
-						"buildTarget": "comment-app:build",
-						"extraWebpackConfig": "projects/comment-app/webpack.config.js"
+						"buildTarget": "event-app:build",
+						"extraWebpackConfig": "projects/event-app/webpack.config.js"
 					}
 				},
 				"test": {
@@ -649,13 +636,14 @@
 							"zone.js",
 							"zone.js/testing"
 						],
-						"tsConfig": "projects/comment-app/tsconfig.spec.json",
+						"tsConfig": "projects/event-app/tsconfig.spec.json",
 						"assets": [
-							"projects/comment-app/src/favicon.ico",
-							"projects/comment-app/src/assets"
+							"projects/event-app/src/favicon.ico",
+							"projects/event-app/src/assets"
 						],
 						"styles": [
-							"projects/comment-app/src/styles.css"
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"	
 						],
 						"scripts": []
 					}
@@ -683,9 +671,9 @@
 							"projects/member-app/src/assets"
 						],
 						"styles": [
-							"node_modules/primeng/resources/themes/saga-blue/theme.css",
-							"node_modules/primeng/resources/primeng.min.css",
-							"node_modules/primeicons/primeicons.css"						],
+					"node_modules/primeicons/primeicons.css",
+			"node_modules/primeflex/primeflex.css"
+						],
 						"scripts": [],
 						"main": "projects/member-app/src/main.ts",
 						"extraWebpackConfig": "projects/member-app/webpack.config.js",
@@ -754,8 +742,8 @@
 							"projects/member-app/src/assets"
 						],
 						"styles": [
-							"projects/member-app/src/styles.css"
-						],
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"						],
 						"scripts": []
 					}
 				}

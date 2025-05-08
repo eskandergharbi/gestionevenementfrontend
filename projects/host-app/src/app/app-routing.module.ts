@@ -49,13 +49,13 @@ export const APP_ROUTES: Routes = [
     .then(m => m.ProjectModule)
   },
   {
-    path: 'comment',
+    path: 'event',
     loadChildren: () => loadRemoteModule({
       type: 'manifest',
-      remoteName: 'comment',
+      remoteName: 'event',
       exposedModule: './Module'
     })
-    .then(m => m.CommentModule)
+    .then(m => m.EventModule)
   },
   {
     path: 'member',

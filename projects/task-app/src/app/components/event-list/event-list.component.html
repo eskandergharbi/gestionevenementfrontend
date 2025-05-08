@@ -1,0 +1,92 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-toolbar>
+<!-- Show "New Event" button only if user has ROLE_Admin -->
+<div class="p-toolbar-group-left">
+  <button *ngIf="hasRole('Admin')" 
+          pButton 
+          label="Nouvel événement" 
+          icon="pi pi-plus" 
+          class="p-button-success" 
+          (click)="openNew()">
+  </button>
+</div>
+
+</p-toolbar>
+
+<p-table #dt [value]="events" [paginator]="true" [rows]="5">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Nom</th>
+      <th>Statut</th>
+      <th>Catégorie</th>
+      <th>Participants</th>
+      <th>Max</th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-event>
+    <tr>
+      <td>{{ event.name }}</td>
+      <td>{{ event.eventStatus }}</td>
+      <td>{{ event.category }}</td>
+      <td>{{ event.participantCount }}</td>
+      <td>{{ event.maxParticipants }}</td>
+      <td>
+        <button *ngIf="hasRole('Admin')" 
+                pButton 
+                icon="pi pi-pencil" 
+                class="p-button-rounded p-button-warning" 
+                (click)="editEvent(event)">
+        </button>
+        
+        <button *ngIf="hasRole('Admin')" 
+                pButton 
+                icon="pi pi-trash" 
+                class="p-button-rounded p-button-danger" 
+                (click)="deleteEvent(event)">
+        </button>
+      </td>
+      
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="eventDialog" [modal]="true" [closable]="false" class="event-dialog">
+  <ng-template pTemplate="header">
+    <h3>{{ event.id ? 'Modifier' : 'Créer' }} un événement</h3>
+  </ng-template>
+
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="name">Nom</label>
+      <input type="text" pInputText id="name" [(ngModel)]="event.name" placeholder="Nom de l'événement" required>
+    </div>
+    
+    <div class="p-field">
+      <label for="category">Catégorie</label>
+      <input type="text" pInputText id="category" [(ngModel)]="event.category" placeholder="Catégorie" required>
+    </div>
+
+    <div class="p-field">
+      <label for="status">Statut</label>
+      <p-dropdown id="status" [(ngModel)]="event.eventStatus" [options]="statuses" placeholder="Statut"></p-dropdown>
+    </div>
+
+    <div class="p-field">
+      <label for="participantCount">Nombre de participants</label>
+      <p-inputNumber id="participantCount" [(ngModel)]="event.participantCount" placeholder="Participants"></p-inputNumber>
+    </div>
+
+    <div class="p-field">
+      <label for="maxParticipants">Participants max</label>
+      <p-inputNumber id="maxParticipants" [(ngModel)]="event.maxParticipants" placeholder="Max Participants"></p-inputNumber>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler" icon="pi pi-times" (click)="hideDialog()"></button>
+    <button pButton label="Enregistrer" icon="pi pi-check" (click)="saveEvent()"></button>
+  </ng-template>
+</p-dialog>

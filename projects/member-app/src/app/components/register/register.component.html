@@ -1,0 +1,21 @@
+<p-toast></p-toast>
+
+<p-card header="Inscription à un événement">
+    <div class="p-fluid">
+      <div class="p-field">
+        <label for="userEmail">Votre Email</label>
+        <input id="userEmail" pInputText [(ngModel)]="userEmail">
+      </div>
+  
+      <div class="p-field">
+        <label for="eventSelect">Sélectionnez un événement</label>
+        <p-dropdown id="eventSelect" [options]="events" [editable]="true" optionLabel="name" [(ngModel)]="selectedEvent"></p-dropdown>
+      </div>
+  
+      <div class="p-d-flex p-jc-between p-mt-3">
+        <button *ngIf="hasRole('Admin')"  pButton label="S'inscrire" icon="pi pi-check" class="p-button-success" (click)="register()"></button>
+        <button *ngIf="hasRole('Admin')"  pButton label="Annuler" icon="pi pi-times" class="p-button-danger" (click)="cancel()"></button>
+      </div>
+    </div>
+  </p-card>
+  

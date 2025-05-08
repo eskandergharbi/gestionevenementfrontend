@@ -1,0 +1,57 @@
+<p-toast></p-toast>
+
+<button *ngIf="hasRole('Admin')" pButton label="New Announcement" icon="pi pi-plus" class="mb-3" (click)="openNewDialog()"></button>
+
+<p-dialog header="{{ editMode ? 'Edit Announcement' : 'New Announcement' }}"
+          [(visible)]="showDialog"
+          [modal]="true"
+          [style]="{ width: '400px' }"
+          [closable]="true"
+          [draggable]="false"
+          [dismissableMask]="true">
+
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="title">Title</label>
+      <input id="title" type="text" pInputText [(ngModel)]="announcement.title" />
+    </div>
+    <div class="p-field">
+      <label for="content">Content</label>
+      <textarea id="content" pInputTextarea [(ngModel)]="announcement.content" rows="4"></textarea>
+    </div>
+    <div class="p-field text-right">
+      <button pButton type="button"
+              [label]="editMode ? 'Update' : 'Send'"
+              icon="pi pi-check"
+              (click)="editMode ? updateAnnouncement() : sendAnnouncement()"></button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-card header="All Announcements" class="mt-4">
+  <p-table [value]="announcements">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Title</th>
+        <th>Content</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-ann>
+      <tr>
+        <td>{{ ann.title }}</td>
+        <td>{{ ann.content }}</td>
+        <td>
+          <button *ngIf="hasRole('Admin')" pButton icon="pi pi-pencil"
+                  (click)="edit(ann)"
+                  class="p-button-rounded p-button-warning"></button>
+          <button *ngIf="hasRole('Admin')" pButton icon="pi pi-trash"
+                  (click)="confirmDelete(ann)"
+                  class="p-button-rounded p-button-danger ml-2"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
+
+<p-confirmDialog></p-confirmDialog>

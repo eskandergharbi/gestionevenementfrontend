@@ -1,0 +1,52 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-toolbar>
+  <div class="p-toolbar-group-left">
+    <button pButton label="Nouveau utilisateur" icon="pi pi-plus" class="p-button-success" (click)="openNew()"></button>
+  </div>
+</p-toolbar>
+
+<p-table [value]="users" selectionMode="single" [(selection)]="selectedUser">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Prénom</th>
+      <th>Nom</th>
+      <th>Email</th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-user>
+    <tr *ngIf="user">
+      <td>{{ user.firstName }}</td>
+      <td>{{ user.lastName }}</td>
+      <td>{{ user.email }}</td>
+      <td>
+        <button  pButton icon="pi pi-pencil" (click)="editUser(user)"></button>
+        <button  pButton icon="pi pi-trash" class="p-button-danger" (click)="deleteUser(user)"></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- ✅ Le dialog est bien EN DEHORS du tableau -->
+<p-dialog header="Détails Utilisateur" [(visible)]="displayDialog" [modal]="true" [closable]="true" (onHide)="hideDialog()">
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="firstName">Prénom</label>
+      <input id="firstName" pInputText [(ngModel)]="selectedUser.firstName">
+    </div>
+    <div class="p-field">
+      <label for="lastName">Nom</label>
+      <input id="lastName" pInputText [(ngModel)]="selectedUser.lastName">
+    </div>
+    <div class="p-field">
+      <label for="email">Email</label>
+      <input id="email" pInputText [(ngModel)]="selectedUser.email">
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button  *ngIf="hasRole('Admin')"  pButton label="Enregistrer" icon="pi pi-check" (click)="saveUser()"></button>
+    <button  *ngIf="hasRole('Admin')"  pButton label="Annuler" icon="pi pi-times" class="p-button-secondary" (click)="hideDialog()"></button>   
+  </ng-template>  
+</p-dialog>

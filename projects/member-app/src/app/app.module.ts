@@ -8,7 +8,6 @@ import {  HttpClientModule } from '@angular/common/http';
 import { DropdownModule } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
-import { MemberComponent } from './components/member/member.component';
 import { AppRoutingModule } from '../../../auth-app/src/app/app.routes';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -17,12 +16,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { BrowserModule } from '@angular/platform-browser';
 
 
 @NgModule({
   imports: [
-    MemberComponent,
     RouterModule.forRoot(routes),
     ButtonModule,
     SidebarModule,
@@ -32,7 +29,6 @@ import { BrowserModule } from '@angular/platform-browser';
     RouterModule, 
     DropdownModule,
     CardModule,
-    BrowserModule,
     AppRoutingModule,
     HttpClientModule,
     FormsModule,
@@ -42,6 +38,7 @@ import { BrowserModule } from '@angular/platform-browser';
     ConfirmDialogModule,
     InputTextModule,
     ToastModule,
+    TableModule, DialogModule, ButtonModule
 // Import RouterModule 
   ],
   declarations: [],
