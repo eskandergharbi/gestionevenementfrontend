@@ -1,32 +1,31 @@
 pipeline {
     agent {
         docker {
-            image 'node:18-bullseye' // Using Debian-based image for Chrome
-            args '--privileged -u root' // Privileged mode for Chrome
-            reuseNode true // Reuse the workspace
+            image 'node:18-bullseye' // Using Debian-based image for better compatibility
+            args '--privileged -u root --shm-size=1gb' // Added shared memory for Chrome
+            reuseNode true
         }
     }
 
     environment {
         CHROME_BIN = '/usr/bin/google-chrome'
-        SONARQUBE = 'SonarQube'
-        DOCKER_HUB_CREDENTIALS = credentials('dockerhub')
-        DOCKER_HUB_NAMESPACE = 'eskandergharbi'
-        IMAGE_NAME = 'gestionevenementfrontend'
+        DISPLAY = ':99'
     }
 
     stages {
         stage('Setup Environment') {
             steps {
                 sh '''
-                    # Install Chrome
+                    # Install Chrome and dependencies
                     apt-get update
-                    apt-get install -y wget gnupg
+                    apt-get install -y wget gnupg xvfb libgconf-2-4 jq
+                    
+                    # Install Chrome
                     wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
                     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
                     apt-get update
                     apt-get install -y google-chrome-stable
-
+                    
                     # Verify installations
                     node --version
                     npm --version
@@ -35,64 +34,110 @@ pipeline {
             }
         }
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git'
+            }
+        }
+
+        stage('Fix Configuration') {
+            steps {
+                sh '''
+                    # Fix PrimeNG CSS imports in all projects
+                    find projects -name "styles.css" -exec sed -i "s|~primeng/resources/primeng.css|~primeng/resources/themes/lara-light-blue/theme.css|g" {} \\;
+                    find projects -name "styles.css" -exec sed -i "/~primeng\\/resources\\/themes\\/lara-light-blue\\/theme.css/a @import '~primeng/resources/primeng.min.css';" {} \\;
+                    
+                    # Ensure test files are included in all tsconfig.spec.json files
+                    find projects -name "tsconfig.spec.json" -exec jq '.include += ["projects/**/*.spec.ts", "projects/**/*.d.ts"]' {} > tmp.json && mv tmp.json {} \\;
+                '''
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 sh 'npm install -g @angular/cli'
-                sh 'npm install'
-                
-                // Fix PrimeNG CSS imports
-                sh '''
-                    if [ -f "projects/host-app/src/styles.css" ]; then
-                        sed -i "s|~primeng/resources/primeng.css|~primeng/resources/themes/saga-blue/theme.css|g" projects/host-app/src/styles.css
-                        sed -i "/~primeng\\/resources\\/themes\\/saga-blue\\/theme.css/a @import '~primeng/resources/primeng.min.css';" projects/host-app/src/styles.css
-                    fi
-                '''
+                sh 'npm ci'
             }
         }
 
         stage('Run Tests') {
             steps {
-                script {
-                    // Update tsconfig.spec.json if needed
-                    def tsConfig = readJSON file: 'tsconfig.spec.json'
-                    if (!tsConfig.include.contains('projects/**/*.spec.ts')) {
-                        tsConfig.include += ['projects/**/*.spec.ts', 'projects/**/*.d.ts']
-                        writeJSON file: 'tsconfig.spec.json', json: tsConfig, pretty: 4
-                    }
+                sh '''
+                    # Start Xvfb for headless testing
+                    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
+                    export DISPLAY=:99
+                    
+                    # Run tests for all applications
+                    ng test host-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test auth-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test report-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test task-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test ressource-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test collaboration-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test event-app --watch=false --browsers=ChromeHeadless --no-progress
+                    ng test member-app --watch=false --browsers=ChromeHeadless --no-progress
+                '''
+            }
+        }
 
-                    // Run tests with ChromeHeadless
-                    sh 'ng test --browsers=ChromeHeadless --watch=false --code-coverage'
+        stage('Build Applications') {
+            steps {
+                sh '''
+                    # Build all applications
+                    ng build host-app --configuration production
+                    ng build auth-app --configuration production
+                    ng build report-app --configuration production
+                    ng build task-app --configuration production
+                    ng build ressource-app --configuration production
+                    ng build collaboration-app --configuration production
+                    ng build event-app --configuration production
+                    ng build member-app --configuration production
+                '''
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            when {
+                expression { env.SONARQUBE_TOKEN != null }
+            }
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=frontend \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://localhost:9005 \
+                        -Dsonar.login=${SONARQUBE_TOKEN} \
+                        -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts \
+                        -Dsonar.tests=projects \
+                        -Dsonar.test.inclusions=**/*.spec.ts \
+                        -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+                    '''
                 }
             }
         }
 
-        stage('Analyse SonarQube') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE}") {
-                    sh "sonar-scanner -Dsonar.projectKey=frontend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9005 -Dsonar.login=${SONARQUBE_TOKEN}"
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
+        stage('Build Docker Images') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_HUB_NAMESPACE}/${IMAGE_NAME}:latest")
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
-                        dockerImage.push('latest')
+                    def apps = [
+                        'host-app',
+                        'auth-app', 
+                        'report-app',
+                        'task-app',
+                        'ressource-app',
+                        'collaboration-app',
+                        'event-app',
+                        'member-app'
+                    ]
+                    
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin'
+                        
+                        apps.each { app ->
+                            dockerImage = docker.build("eskandergharbi/${app}:latest", "--build-arg APP_NAME=${app} ./")
+                            dockerImage.push('latest')
+                        }
                     }
                 }
             }
@@ -101,11 +146,12 @@ pipeline {
 
     post {
         always {
+            sh 'pkill -f Xvfb' // Clean up Xvfb process
             cleanWs()
-            script {
-                // Archive test results if they exist
-                junit '**/test-results.xml'
-            }
+            
+            // Archive test results and coverage
+            junit '**/test-results.xml'
+            archiveArtifacts '**/coverage/**/*'
         }
     }
 }
