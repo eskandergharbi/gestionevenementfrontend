@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'node:18-bullseye'
-            args '--shm-size=1gb --ipc=shared'  // Added IPC shared for Chrome
+            args '--shm-size=1gb --ipc=shared'
             reuseNode true
         }
     }
@@ -10,33 +10,27 @@ pipeline {
     environment {
         CHROME_BIN = '/usr/bin/google-chrome'
         DISPLAY = ':99'
+        NG_CLI_ANALYTICS = 'false'
     }
 
     stages {
         stage('Setup Environment') {
             steps {
-                // Install Chrome dependencies first
                 sh '''
                     apt-get update && apt-get install -y --no-install-recommends \
                         wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
                         libnss3 libasound2 fonts-liberation
                     rm -rf /var/lib/apt/lists/*
-                '''
-                
-                // Install Chrome
-                sh '''
+                    
                     wget -q -O /tmp/google-key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub
                     apt-key add /tmp/google-key.pub
                     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
                     apt-get update && apt-get install -y google-chrome-stable
                     rm -rf /var/lib/apt/lists/*
-                '''
-                
-                // Verify installations
-                sh '''
-                    node --version
-                    npm --version
-                    google-chrome --version
+                    
+                    echo "Node: $(node --version)"
+                    echo "NPM: $(npm --version)"
+                    echo "Chrome: $(google-chrome --version)"
                 '''
             }
         }
@@ -44,10 +38,12 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 checkout([
-                    $class: 'GitSCM', 
+                    $class: 'GitSCM',
                     branches: [[name: 'main']],
                     extensions: [[$class: 'CleanCheckout']],
-                    userRemoteConfigs: [[url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git']]
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git'
+                    ]]
                 ])
             }
         }
@@ -55,22 +51,15 @@ pipeline {
         stage('Fix Configuration') {
             steps {
                 sh '''
-                    # Install jq if not present
-                    if ! command -v jq &> /dev/null; then
-                        apt-get update && apt-get install -y jq
-                    fi
+                    apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
                     
-                    # Fix PrimeNG CSS imports
                     for css in projects/*/src/styles.css; do
-                        [ -f "$css" ] || continue
-                        sed -i 's|~primeng/resources/primeng.css|~primeng/resources/themes/lara-light-blue/theme.css|g' "$css"
-                        echo "@import '~primeng/resources/primeng.min.css';" >> "$css"
+                        [ -f "$css" ] && sed -i 's|~primeng/resources/primeng.css|~primeng/resources/themes/lara-light-blue/theme.css|g' "$css"
+                        [ -f "$css" ] && echo "@import '~primeng/resources/primeng.min.css';" >> "$css"
                     done
                     
-                    # Update tsconfig.spec.json
                     for tsconfig in projects/*/tsconfig.spec.json; do
-                        [ -f "$tsconfig" ] || continue
-                        jq '.include += ["**/*.spec.ts", "**/*.d.ts"]' "$tsconfig" > "${tsconfig}.tmp" && \
+                        [ -f "$tsconfig" ] && jq '.include += ["**/*.spec.ts", "**/*.d.ts"]' "$tsconfig" > "${tsconfig}.tmp" && \
                         mv "${tsconfig}.tmp" "$tsconfig"
                     done
                 '''
@@ -81,7 +70,7 @@ pipeline {
             steps {
                 sh '''
                     npm install -g @angular/cli
-                    npm ci --no-audit
+                    npm ci --no-audit --prefer-offline
                 '''
             }
         }
@@ -89,24 +78,19 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                    # Start Xvfb in background
                     Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
                     XVFB_PID=$!
                     
-                    # Run tests with additional Chrome flags
                     export CHROME_BIN=/usr/bin/google-chrome
+                    export CHROME_HEADLESS=true
+                    
                     ng test host-app --watch=false --browsers=ChromeHeadless --no-progress \
                         --code-coverage --source-map=false \
-                        --no-sandbox --disable-gpu --disable-dev-shm-usage || true
-                    ng test auth-app --watch=false --browsers=ChromeHeadless --no-progress \
-                        --code-coverage --source-map=false \
-                        --no-sandbox --disable-gpu --disable-dev-shm-usage || true
-                    ng test report-app --watch=false --browsers=ChromeHeadless --no-progress \
-                        --code-coverage --source-map=false \
-                        --no-sandbox --disable-gpu --disable-dev-shm-usage || true
+                        --no-sandbox --disable-gpu --disable-dev-shm-usage
+                    test_exit=$?
                     
-                    # Stop Xvfb
                     kill $XVFB_PID || true
+                    exit $test_exit
                 '''
             }
         }
@@ -130,7 +114,7 @@ pipeline {
                     sh '''
                         sonar-scanner \
                             -Dsonar.projectKey=frontend \
-                            -Dsonar.sources=. \
+                            -Dsonar.sources=projects \
                             -Dsonar.host.url=http://localhost:9005 \
                             -Dsonar.login=${SONARQUBE_TOKEN} \
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
@@ -157,14 +141,22 @@ pipeline {
                 }
             }
         }
+
+        stage('Post Build Actions') {
+            steps {
+                script {
+                    // Perform all post-build actions here instead of in post section
+                    junit '**/test-results.xml'
+                    archiveArtifacts artifacts: '**/dist/**', allowEmptyArchive: true
+                    sh 'pkill -f Xvfb || true'
+                }
+            }
+        }
     }
 
     post {
         always {
-            sh 'pkill -f Xvfb || true'
             cleanWs()
-            junit '**/test-results.xml'
-            archiveArtifacts artifacts: '**/dist/**', allowEmptyArchive: true
         }
     }
 }
