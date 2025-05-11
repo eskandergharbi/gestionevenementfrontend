@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         SONARQUBE = 'SonarQube'
-        DOCKER_HUB_CREDENTIALS = 'Amine392*'
-        DOCKER_HUB_NAMESPACE = 'eskandergharbi' // remplace par ton nom DockerHub
+        DOCKER_HUB_CREDENTIALS = credentials('dockerhub') // Remplace par l'ID réel de ton secret dans Jenkins
+        DOCKER_HUB_NAMESPACE = 'eskandergharbi'
         IMAGE_NAME = 'gestionevenementfrontend'
     }
 
@@ -25,21 +25,25 @@ pipeline {
         stage('Analyse SonarQube') {
             steps {
                 withSonarQubeEnv("${SONARQUBE}") {
-                    sh "sonar-scanner -Dsonar.projectKey=frontend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9005 -Dsonar.login=${sonar-token}"
+                    sh "sonar-scanner -Dsonar.projectKey=frontend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9005 -Dsonar.login=${SONARQUBE_TOKEN}"
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKER_HUB_NAMESPACE}/${IMAGE_NAME}:latest ."
+                script {
+                    dockerImage = docker.build("${DOCKER_HUB_NAMESPACE}/${IMAGE_NAME}:latest")
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
-                    docker.image("${DOCKER_HUB_NAMESPACE}/${IMAGE_NAME}:latest").push()
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                        dockerImage.push('latest')
+                    }
                 }
             }
         }
