@@ -20,6 +20,7 @@ pipeline {
 
         stage('Install deps & test') {
             steps {
+                sh 'npm install -g @angular/cli'  // Install Angular CLI globall
                 sh 'npm install'
                 sh 'npm test --if-present'
             }
