@@ -1,8 +1,9 @@
 pipeline {
     agent {
         docker {
-            image 'node:18-bullseye'  // Use Debian-based image for Chrome
-            args '--privileged -u root'  // Privileged mode for Chrome
+            image 'node:18-bullseye' // Using Debian-based image for Chrome
+            args '--privileged -u root' // Privileged mode for Chrome
+            reuseNode true // Reuse the workspace
         }
     }
 
@@ -15,15 +16,21 @@ pipeline {
     }
 
     stages {
-        stage('Setup Chrome') {
+        stage('Setup Environment') {
             steps {
                 sh '''
+                    # Install Chrome
                     apt-get update
                     apt-get install -y wget gnupg
                     wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
                     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
                     apt-get update
                     apt-get install -y google-chrome-stable
+
+                    # Verify installations
+                    node --version
+                    npm --version
+                    google-chrome --version
                 '''
             }
         }
@@ -34,39 +41,37 @@ pipeline {
             }
         }
 
-        stage('Install deps & test') {
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install -g @angular/cli'
                 sh 'npm install'
                 
-                // Fix PrimeNG imports first
+                // Fix PrimeNG CSS imports
                 sh '''
-                    sed -i "s|~primeng/resources/primeng.css|~primeng/resources/themes/saga-blue/theme.css|g" projects/host-app/src/styles.css
-                    sed -i "s|~primeng/resources/primeng.css|~primeng/resources/primeng.min.css|g" projects/host-app/src/styles.css
+                    if [ -f "projects/host-app/src/styles.css" ]; then
+                        sed -i "s|~primeng/resources/primeng.css|~primeng/resources/themes/saga-blue/theme.css|g" projects/host-app/src/styles.css
+                        sed -i "/~primeng\\/resources\\/themes\\/saga-blue\\/theme.css/a @import '~primeng/resources/primeng.min.css';" projects/host-app/src/styles.css
+                    fi
                 '''
-                
-                // Update tsconfig.spec.json
-                sh '''
-                    echo '{
-                      "extends": "./tsconfig.json",
-                      "compilerOptions": {
-                        "outDir": "./out-tsc/spec",
-                        "types": ["jasmine", "node"]
-                      },
-                      "include": [
-                        "src/**/*.spec.ts",
-                        "src/**/*.d.ts",
-                        "projects/**/*.spec.ts",
-                        "projects/**/*.d.ts"
-                      ]
-                    }' > tsconfig.spec.json
-                '''
-                
-                sh 'ng test --browsers=ChromeHeadless --watch=false'
             }
         }
 
-        // Rest of your stages remain the same...
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Update tsconfig.spec.json if needed
+                    def tsConfig = readJSON file: 'tsconfig.spec.json'
+                    if (!tsConfig.include.contains('projects/**/*.spec.ts')) {
+                        tsConfig.include += ['projects/**/*.spec.ts', 'projects/**/*.d.ts']
+                        writeJSON file: 'tsconfig.spec.json', json: tsConfig, pretty: 4
+                    }
+
+                    // Run tests with ChromeHeadless
+                    sh 'ng test --browsers=ChromeHeadless --watch=false --code-coverage'
+                }
+            }
+        }
+
         stage('Analyse SonarQube') {
             steps {
                 withSonarQubeEnv("${SONARQUBE}") {
@@ -97,6 +102,10 @@ pipeline {
     post {
         always {
             cleanWs()
+            script {
+                // Archive test results if they exist
+                junit '**/test-results.xml'
+            }
         }
     }
 }
