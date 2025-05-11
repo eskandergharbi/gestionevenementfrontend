@@ -2,58 +2,76 @@ pipeline {
     agent {
         docker {
             image 'node:18-bullseye'
-            args '--shm-size=1gb'  // Removed privileged flag
+            args '--shm-size=1gb --ipc=shared'  // Added IPC shared for Chrome
             reuseNode true
         }
     }
 
     environment {
         CHROME_BIN = '/usr/bin/google-chrome'
+        DISPLAY = ':99'
     }
 
     stages {
         stage('Setup Environment') {
             steps {
-                // Split complex setup into simpler commands
-                sh 'apt-get update'
-                sh 'apt-get install -y wget gnupg xvfb libgconf-2-4'
+                // Install Chrome dependencies first
+                sh '''
+                    apt-get update && apt-get install -y --no-install-recommends \
+                        wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
+                        libnss3 libasound2 fonts-liberation
+                    rm -rf /var/lib/apt/lists/*
+                '''
                 
-                // Chrome installation in separate steps
-                sh 'wget -q -O /tmp/google-key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub'
-                sh 'apt-key add /tmp/google-key.pub'
-                sh 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
-                sh 'apt-get update'
-                sh 'apt-get install -y google-chrome-stable'
+                // Install Chrome
+                sh '''
+                    wget -q -O /tmp/google-key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub
+                    apt-key add /tmp/google-key.pub
+                    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+                    apt-get update && apt-get install -y google-chrome-stable
+                    rm -rf /var/lib/apt/lists/*
+                '''
                 
-                // Verification
-                sh 'node --version'
-                sh 'npm --version'
-                sh 'google-chrome --version'
+                // Verify installations
+                sh '''
+                    node --version
+                    npm --version
+                    google-chrome --version
+                '''
             }
         }
 
         stage('Checkout Code') {
             steps {
-                checkout([$class: 'GitSCM', 
-                         branches: [[name: 'main']],
-                         userRemoteConfigs: [[url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git']]
-                        ])
+                checkout([
+                    $class: 'GitSCM', 
+                    branches: [[name: 'main']],
+                    extensions: [[$class: 'CleanCheckout']],
+                    userRemoteConfigs: [[url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git']]
+                ])
             }
         }
 
         stage('Fix Configuration') {
             steps {
-                // Replace complex find/sed/jq with simpler alternatives
                 sh '''
-                    # Fix PrimeNG CSS imports (simplified)
+                    # Install jq if not present
+                    if ! command -v jq &> /dev/null; then
+                        apt-get update && apt-get install -y jq
+                    fi
+                    
+                    # Fix PrimeNG CSS imports
                     for css in projects/*/src/styles.css; do
+                        [ -f "$css" ] || continue
                         sed -i 's|~primeng/resources/primeng.css|~primeng/resources/themes/lara-light-blue/theme.css|g' "$css"
                         echo "@import '~primeng/resources/primeng.min.css';" >> "$css"
                     done
                     
-                    # Update tsconfig.spec.json (simplified)
+                    # Update tsconfig.spec.json
                     for tsconfig in projects/*/tsconfig.spec.json; do
-                        echo "$(jq '.include += ["**/*.spec.ts", "**/*.d.ts"]' "$tsconfig")" > "$tsconfig"
+                        [ -f "$tsconfig" ] || continue
+                        jq '.include += ["**/*.spec.ts", "**/*.d.ts"]' "$tsconfig" > "${tsconfig}.tmp" && \
+                        mv "${tsconfig}.tmp" "$tsconfig"
                     done
                 '''
             }
@@ -61,22 +79,34 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install -g @angular/cli'
-                sh 'npm ci'
+                sh '''
+                    npm install -g @angular/cli
+                    npm ci --no-audit
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
                 sh '''
-                    # Start Xvfb
+                    # Start Xvfb in background
                     Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
-                    export DISPLAY=:99
+                    XVFB_PID=$!
                     
-                    # Run tests sequentially to avoid sandbox issues
-                    ng test host-app --watch=false --browsers=ChromeHeadless --no-progress || true
-                    ng test auth-app --watch=false --browsers=ChromeHeadless --no-progress || true
-                    ng test report-app --watch=false --browsers=ChromeHeadless --no-progress || true
+                    # Run tests with additional Chrome flags
+                    export CHROME_BIN=/usr/bin/google-chrome
+                    ng test host-app --watch=false --browsers=ChromeHeadless --no-progress \
+                        --code-coverage --source-map=false \
+                        --no-sandbox --disable-gpu --disable-dev-shm-usage || true
+                    ng test auth-app --watch=false --browsers=ChromeHeadless --no-progress \
+                        --code-coverage --source-map=false \
+                        --no-sandbox --disable-gpu --disable-dev-shm-usage || true
+                    ng test report-app --watch=false --browsers=ChromeHeadless --no-progress \
+                        --code-coverage --source-map=false \
+                        --no-sandbox --disable-gpu --disable-dev-shm-usage || true
+                    
+                    # Stop Xvfb
+                    kill $XVFB_PID || true
                 '''
             }
         }
@@ -84,10 +114,9 @@ pipeline {
         stage('Build Applications') {
             steps {
                 sh '''
-                    # Build apps sequentially
-                    ng build host-app --configuration production
-                    ng build auth-app --configuration production
-                    ng build report-app --configuration production
+                    ng build host-app --configuration production --source-map=false
+                    ng build auth-app --configuration production --source-map=false
+                    ng build report-app --configuration production --source-map=false
                 '''
             }
         }
@@ -98,12 +127,22 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner -Dsonar.projectKey=frontend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9005 -Dsonar.login=${SONARQUBE_TOKEN}'
+                    sh '''
+                        sonar-scanner \
+                            -Dsonar.projectKey=frontend \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://localhost:9005 \
+                            -Dsonar.login=${SONARQUBE_TOKEN} \
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                    '''
                 }
             }
         }
 
         stage('Build Docker Images') {
+            when {
+                expression { return env.DOCKER_USER != null && env.DOCKER_PASS != null }
+            }
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub',
@@ -125,6 +164,7 @@ pipeline {
             sh 'pkill -f Xvfb || true'
             cleanWs()
             junit '**/test-results.xml'
+            archiveArtifacts artifacts: '**/dist/**', allowEmptyArchive: true
         }
     }
 }
