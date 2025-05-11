@@ -1,80 +1,53 @@
 pipeline {
-    agent {
-        label 'docker'  // Utilisation d'un label si Docker est installé sur un agent Jenkins spécifique
-    }
+    agent any
 
     environment {
-        DOCKER_HUB_USERNAME = "eskandergharbi"
-        DOCKER_HUB_PASSWORD = credentials('docker-hub-password') // Credentials Jenkins
-        HEROKU_API_KEY = credentials('heroku-api-key') // Credentials Jenkins
-        HEROKU_APP_FRONTEND = "nom-de-votre-app-frontend"
+        SONARQUBE = 'SonarQube'
+        DOCKER_HUB_CREDENTIALS = 'Amine392*'
+        DOCKER_HUB_NAMESPACE = 'eskandergharbi' // remplace par ton nom DockerHub
+        IMAGE_NAME = 'gestionevenementfrontend'
     }
 
     stages {
-        stage('Mettre à jour le dépôt Frontend') {
+        stage('Checkout') {
             steps {
-                script {
-                    if (fileExists('frontend/.git')) {
-                        dir('frontend') {
-                            sh 'git reset --hard'
-                            sh 'git pull origin main'
-                        }
-                    } else {
-                        sh 'git clone https://github.com/eskandergharbi/projetfederateurfrontend.git frontend'
-                    }
+                git branch: 'main', url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git'
+            }
+        }
+
+        stage('Install deps & test') {
+            steps {
+                sh 'npm install'
+                sh 'npm test --if-present'
+            }
+        }
+
+        stage('Analyse SonarQube') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE}") {
+                    sh "sonar-scanner -Dsonar.projectKey=frontend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9005 -Dsonar.login=${sonar-token}"
                 }
             }
         }
 
-        stage('Installer dépendances & Tester Frontend') {
+        stage('Build Docker Image') {
             steps {
-                script {
-                    dir('frontend') {
-                        sh 'npm install'  // Installer les dépendances via npm
-                        sh 'npm run test -- --watch=false --browsers=ChromeHeadless'  // Lancer les tests unitaires Angular
-                    }
-                }
+                sh "docker build -t ${DOCKER_HUB_NAMESPACE}/${IMAGE_NAME}:latest ."
             }
         }
 
-        stage('Connexion à Docker Hub et Heroku') {
+        stage('Push Docker Image') {
             steps {
-                script {
-                    sh 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
-                    sh 'heroku container:login'
-                }
-            }
-        }
-
-        stage('Docker Build & Push Frontend') {
-            steps {
-                script {
-                    dir('frontend') {
-                        sh 'docker build -t $DOCKER_HUB_USERNAME/frontend-app .'
-                        sh 'docker push $DOCKER_HUB_USERNAME/frontend-app'
-                    }
-                }
-            }
-        }
-
-        stage('Déployer sur Heroku Frontend') {
-            steps {
-                script {
-                    dir('frontend') {
-                        sh 'heroku container:push web --app $HEROKU_APP_FRONTEND'
-                        sh 'heroku container:release web --app $HEROKU_APP_FRONTEND'
-                    }
+                docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                    docker.image("${DOCKER_HUB_NAMESPACE}/${IMAGE_NAME}:latest").push()
                 }
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Déploiement du Frontend réussi sur Heroku ! 🚀"
-        }
-        failure {
-            echo "❌ Échec du pipeline Frontend, vérifiez les logs."
+        always {
+            cleanWs()
         }
     }
 }
