@@ -1,5 +1,8 @@
 pipeline {
     agent any
+     tools {
+        nodejs 'NodeJS-18' // Nom exact configuré dans Jenkins
+    }
 
     environment {
         SONARQUBE = 'SonarQube'
