@@ -77,21 +77,29 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
-                    XVFB_PID=$!
-                    
-                    export CHROME_BIN=/usr/bin/google-chrome
-                    export CHROME_HEADLESS=true
-                    
-                    ng test host-app --watch=false --browsers=ChromeHeadless --no-progress \
-                        --code-coverage --source-map=false \
-                        --no-sandbox --disable-gpu --disable-dev-shm-usage
-                    test_exit=$?
-                    
-                    kill $XVFB_PID || true
-                    exit $test_exit
-                '''
+                script {
+                    try {
+                        sh '''
+                            Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
+                            XVFB_PID=$!
+                            
+                            export CHROME_BIN=/usr/bin/google-chrome
+                            export CHROME_HEADLESS=true
+                            
+                            ng test host-app --watch=false --browsers=ChromeHeadless --no-progress \
+                                --code-coverage --source-map=false \
+                                --no-sandbox --disable-gpu --disable-dev-shm-usage
+                            ng test auth-app --watch=false --browsers=ChromeHeadless --no-progress \
+                                --code-coverage --source-map=false \
+                                --no-sandbox --disable-gpu --disable-dev-shm-usage
+                            ng test report-app --watch=false --browsers=ChromeHeadless --no-progress \
+                                --code-coverage --source-map=false \
+                                --no-sandbox --disable-gpu --disable-dev-shm-usage
+                        '''
+                    } finally {
+                        sh 'pkill -f Xvfb || true'
+                    }
+                }
             }
         }
 
@@ -142,14 +150,10 @@ pipeline {
             }
         }
 
-        stage('Post Build Actions') {
+        stage('Archive Results') {
             steps {
-                script {
-                    // Perform all post-build actions here instead of in post section
-                    junit '**/test-results.xml'
-                    archiveArtifacts artifacts: '**/dist/**', allowEmptyArchive: true
-                    sh 'pkill -f Xvfb || true'
-                }
+                junit '**/test-results.xml'
+                archiveArtifacts artifacts: '**/dist/**', allowEmptyArchive: true
             }
         }
     }
