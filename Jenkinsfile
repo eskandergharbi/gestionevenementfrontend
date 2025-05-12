@@ -38,13 +38,13 @@ pipeline {
                                 wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
                                 libnss3 libasound2 fonts-liberation
                             rm -rf /var/lib/apt/lists/*
-                            
+
                             wget -q -O /tmp/google-key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub
                             apt-key add /tmp/google-key.pub
                             echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
                             apt-get update && apt-get install -y google-chrome-stable
                             rm -rf /var/lib/apt/lists/*
-                            
+
                             echo "Node: $(node --version)"
                             echo "NPM: $(npm --version)"
                             echo "Chrome: $(google-chrome --version)"
@@ -56,12 +56,12 @@ pipeline {
                     steps {
                         sh '''
                             apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
-                            
+
                             for css in projects/*/src/styles.css; do
                                 [ -f "$css" ] && sed -i 's|~primeng/resources/primeng.css|~primeng/resources/themes/lara-light-blue/theme.css|g' "$css"
                                 [ -f "$css" ] && echo "@import '~primeng/resources/primeng.min.css';" >> "$css"
                             done
-                            
+
                             for tsconfig in projects/*/tsconfig.spec.json; do
                                 [ -f "$tsconfig" ] && jq '.include += ["**/*.spec.ts", "**/*.d.ts"]' "$tsconfig" > "${tsconfig}.tmp" && \
                                 mv "${tsconfig}.tmp" "$tsconfig"
@@ -139,7 +139,7 @@ pipeline {
         }
 
         stage('Build Docker Images') {
-            agent any
+            agent { label 'docker-enabled-agent' }
             when {
                 expression { return env.DOCKER_USER != null && env.DOCKER_PASS != null }
             }
