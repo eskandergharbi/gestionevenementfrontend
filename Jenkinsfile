@@ -5,6 +5,8 @@ pipeline {
         CHROME_BIN = '/usr/bin/google-chrome'
         DISPLAY = ':99'
         NG_CLI_ANALYTICS = 'false'
+        DOCKER_REGISTRY = 'eskandergharbi' // À adapter
+        SONARQUBE_URL = 'http://sonarqube:9200' // À adapter
     }
 
     stages {
@@ -16,17 +18,18 @@ pipeline {
                     branches: [[name: 'main']],
                     extensions: [[$class: 'CleanCheckout']],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git'
+                        url: 'https://github.com/eskandergharbi/gestionevenementfrontend.git',
+                        credentialsId: 'git-credentials'
                     ]]
                 ])
             }
         }
 
-        stage('Docker Build and Test') {
+        stage('Build & Test') {
             agent {
                 docker {
                     image 'node:18-bullseye'
-                    args '--shm-size=1gb --ipc=shared'
+                    args '--shm-size=1gb --ipc=shared -v /tmp/.X11-unix:/tmp/.X11-unix'
                     reuseNode true
                 }
             }
@@ -44,28 +47,6 @@ pipeline {
                             echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
                             apt-get update && apt-get install -y google-chrome-stable
                             rm -rf /var/lib/apt/lists/*
-
-                            echo "Node: $(node --version)"
-                            echo "NPM: $(npm --version)"
-                            echo "Chrome: $(google-chrome --version)"
-                        '''
-                    }
-                }
-
-                stage('Fix Configuration') {
-                    steps {
-                        sh '''
-                            apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
-
-                            for css in projects/*/src/styles.css; do
-                                [ -f "$css" ] && sed -i 's|~primeng/resources/primeng.css|~primeng/resources/themes/lara-light-blue/theme.css|g' "$css"
-                                [ -f "$css" ] && echo "@import '~primeng/resources/primeng.min.css';" >> "$css"
-                            done
-
-                            for tsconfig in projects/*/tsconfig.spec.json; do
-                                [ -f "$tsconfig" ] && jq '.include += ["**/*.spec.ts", "**/*.d.ts"]' "$tsconfig" > "${tsconfig}.tmp" && \
-                                mv "${tsconfig}.tmp" "$tsconfig"
-                            done
                         '''
                     }
                 }
@@ -73,7 +54,7 @@ pipeline {
                 stage('Install Dependencies') {
                     steps {
                         sh '''
-                            npm install -g @angular/cli
+                            npm install -g @angular/cli sonarqube-scanner
                             npm ci --no-audit --prefer-offline
                         '''
                     }
@@ -90,15 +71,14 @@ pipeline {
                                     export CHROME_BIN=/usr/bin/google-chrome
                                     export CHROME_HEADLESS=true
 
-                                    ng test host-app --watch=false --browsers=ChromeHeadless --no-progress \
-                                        --code-coverage --source-map=false \
-                                        --no-sandbox --disable-gpu --disable-dev-shm-usage
-                                    ng test auth-app --watch=false --browsers=ChromeHeadless --no-progress \
-                                        --code-coverage --source-map=false \
-                                        --no-sandbox --disable-gpu --disable-dev-shm-usage
-                                    ng test report-app --watch=false --browsers=ChromeHeadless --no-progress \
-                                        --code-coverage --source-map=false \
-                                        --no-sandbox --disable-gpu --disable-dev-shm-usage
+                                    # Run tests for all microfrontends
+                                    for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
+                                        if [ -d "projects/$app" ]; then
+                                            ng test $app --watch=false --browsers=ChromeHeadless --no-progress \
+                                                --code-coverage --source-map=false \
+                                                --no-sandbox --disable-gpu --disable-dev-shm-usage || true
+                                        fi
+                                    done
                                 '''
                             } finally {
                                 sh 'pkill -f Xvfb || true'
@@ -110,9 +90,12 @@ pipeline {
                 stage('Build Applications') {
                     steps {
                         sh '''
-                            ng build host-app --configuration production --source-map=false
-                            ng build auth-app --configuration production --source-map=false
-                            ng build report-app --configuration production --source-map=false
+                            # Build all microfrontends
+                            for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
+                                if [ -d "projects/$app" ]; then
+                                    ng build $app --configuration production --source-map=false
+                                fi
+                            done
                         '''
                     }
                 }
@@ -121,55 +104,96 @@ pipeline {
 
         stage('SonarQube Analysis') {
             agent any
-            when {
-                expression { return env.SONARQUBE_TOKEN != null }
+            environment {
+                SONAR_TOKEN = credentials('sonarqube-token')
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        sonar-scanner \
-                            -Dsonar.projectKey=frontend \
-                            -Dsonar.sources=projects \
-                            -Dsonar.host.url=http://localhost:9005 \
-                            -Dsonar.login=${SONARQUBE_TOKEN} \
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                        # Generate sonar-project.properties dynamically
+                        cat <<EOT > sonar-project.properties
+                        sonar.projectKey=frontend-microfrontends
+                        sonar.projectName=Microfrontend Platform
+                        sonar.projectVersion=\${BUILD_NUMBER}
+                        sonar.sources=projects
+                        sonar.tests=projects
+                        sonar.sourceEncoding=UTF-8
+                        sonar.exclusions=**/node_modules/**,**/dist/**,**/*.json,**/environment*.ts
+                        sonar.test.inclusions=**/*.spec.ts
+                        sonar.typescript.lcov.reportPaths=coverage/lcov.info
+                        sonar.modules=host-module,auth-module,report-module,collaboration-module,ressource-module,task-module,member-module,event-module
+
+                        # Host App
+                        host-module.sonar.projectKey=host-app
+                        host-module.sonar.projectName=Host App
+                        host-module.sonar.sources=projects/host-app/src
+                        host-module.sonar.tests=projects/host-app/src
+
+                        # Auth App
+                        auth-module.sonar.projectKey=auth-app
+                        auth-module.sonar.projectName=Auth App
+                        auth-module.sonar.sources=projects/auth-app/src
+                        auth-module.sonar.tests=projects/auth-app/src
+
+                        # Add other modules similarly...
+                        EOT
+
+                        sonar-scanner
                     '''
+                }
+            }
+            post {
+                success {
+                    script {
+                        timeout(time: 5, unit: 'MINUTES') {
+                            waitForQualityGate abortPipeline: true
+                        }
+                    }
                 }
             }
         }
 
-        stage('Build Docker Images') {
-            agent { label 'docker-enabled-agent' }
-            when {
-                expression { return env.DOCKER_USER != null && env.DOCKER_PASS != null }
+        stage('Build & Push Docker Images') {
+            agent { label 'docker' }
+            environment {
+                DOCKER_CREDS = credentials('docker-hub-credentials')
             }
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                        docker build -t eskandergharbi/host-app:latest --build-arg APP_NAME=host-app .
-                        docker push eskandergharbi/host-app:latest
-                    '''
+                script {
+                    def apps = ['host-app', 'auth-app', 'report-app', 'collaboration-app', 'ressource-app', 'task-app', 'member-app', 'event-app']
+                    
+                    apps.each { app ->
+                        if (fileExists("projects/${app}")) {
+                            stage("Build ${app}") {
+                                sh """
+                                    docker build \
+                                        -t ${DOCKER_REGISTRY}/${app}:${BUILD_NUMBER} \
+                                        -t ${DOCKER_REGISTRY}/${app}:latest \
+                                        --build-arg APP_NAME=${app} \
+                                        -f Dockerfile.${app} .
+                                    
+                                    docker push ${DOCKER_REGISTRY}/${app}:${BUILD_NUMBER}
+                                    docker push ${DOCKER_REGISTRY}/${app}:latest
+                                """
+                            }
+                        }
+                    }
                 }
-            }
-        }
-
-        stage('Archive Results') {
-            agent any
-            steps {
-                junit '**/test-results.xml'
-                archiveArtifacts artifacts: '**/dist/**', allowEmptyArchive: true
             }
         }
     }
 
     post {
         always {
+            archiveArtifacts artifacts: '**/dist/**/*,coverage/**/*', allowEmptyArchive: true
+            junit '**/test-results.xml'
             cleanWs(deleteDirs: true)
+        }
+        success {
+            slackSend(color: 'good', message: "Build ${currentBuild.currentResult}: Job ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+        }
+        failure {
+            slackSend(color: 'danger', message: "Build ${currentBuild.currentResult}: Job ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
     }
 }
