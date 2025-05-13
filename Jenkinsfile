@@ -28,7 +28,7 @@ pipeline {
             agent {
                 docker {
                     image 'node:18-bullseye'
-                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix'
+                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix --user root' // Added --user root
                     reuseNode true
                 }
             }
@@ -37,6 +37,7 @@ pipeline {
                 stage('Installation de Chrome') {
                     steps {
                         sh '''
+                            # Run as root in container
                             apt-get update && apt-get install -y --no-install-recommends \
                                 wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
                                 libnss3 libasound2 fonts-liberation curl
@@ -196,7 +197,7 @@ pipeline {
 
     post {
         always {
-            node('master') {
+            node('built-in') {  // Changed from 'master' to 'built-in' or your specific node label
                 archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
                 junit '**/test-results.xml'
                 cleanWs(deleteDirs: true)
