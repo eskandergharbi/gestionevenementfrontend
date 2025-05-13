@@ -12,6 +12,7 @@ pipeline {
     stages {
         stage('Récupération du code') {
             steps {
+                cleanWs()
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: 'main']],
@@ -28,7 +29,7 @@ pipeline {
             agent {
                 docker {
                     image 'node:18-bullseye'
-                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix --user root'
+                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix -u node'
                     reuseNode true
                 }
             }
@@ -37,13 +38,13 @@ pipeline {
                 stage('Installation de Chrome') {
                     steps {
                         sh '''
-                            apt-get update && apt-get install -y --no-install-recommends \
+                            sudo apt-get update && sudo apt-get install -y --no-install-recommends \
                                 wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
                                 libnss3 libasound2 fonts-liberation curl
 
-                            curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
-                            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-                            apt-get update && apt-get install -y google-chrome-stable
+                            curl -sSL https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+                            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+                            sudo apt-get update && sudo apt-get install -y google-chrome-stable
                         '''
                     }
                 }
@@ -51,7 +52,13 @@ pipeline {
                 stage('Installation des dépendances') {
                     steps {
                         sh '''
+                            # Clean potential previous installations
+                            rm -rf node_modules || true
+                            
+                            # Install global packages
                             npm install -g @angular/cli sonarqube-scanner
+                            
+                            # Install project dependencies with clean cache
                             npm ci --no-audit --prefer-offline
                         '''
                     }
