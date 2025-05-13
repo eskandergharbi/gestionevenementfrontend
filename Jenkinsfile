@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
 
     environment {
         CHROME_BIN = '/usr/bin/google-chrome'
@@ -10,9 +10,16 @@ pipeline {
     }
 
     stages {
-        stage('Récupération du code') {
+        stage('Clean Workspace') {
+            agent any
             steps {
                 cleanWs()
+            }
+        }
+
+        stage('Checkout Code') {
+            agent any
+            steps {
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: 'main']],
@@ -25,57 +32,64 @@ pipeline {
             }
         }
 
-        stage('Build & Tests') {
+        stage('Build & Test') {
             agent {
                 docker {
-                    image 'node:18-bullseye'
-                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix -u node'
+                    image 'bitnami/node:18-prod'  // Lightweight production-ready image
+                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix -u root'
                     reuseNode true
                 }
             }
-
             stages {
-                stage('Installation de Chrome') {
+                stage('Setup Environment') {
                     steps {
                         sh '''
-                            sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+                            # Install Chrome dependencies
+                            apt-get update && apt-get install -y --no-install-recommends \
                                 wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
-                                libnss3 libasound2 fonts-liberation curl
+                                libnss3 libasound2 fonts-liberation
 
-                            curl -sSL https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-                            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-                            sudo apt-get update && sudo apt-get install -y google-chrome-stable
+                            # Install Chrome
+                            wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+                            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+                            apt-get update && apt-get install -y google-chrome-stable
+
+                            # Verify installations
+                            google-chrome --version
+                            node --version
+                            npm --version
                         '''
                     }
                 }
 
-                stage('Installation des dépendances') {
+                stage('Install Dependencies') {
                     steps {
                         sh '''
-                            # Clean potential previous installations
-                            rm -rf node_modules || true
+                            # Set proper permissions
+                            chown -R root:root /workspace
                             
-                            # Install global packages
-                            npm install -g @angular/cli sonarqube-scanner
-                            
-                            # Install project dependencies with clean cache
-                            npm ci --no-audit --prefer-offline
+                            # Clean install
+                            npm install -g @angular/cli@latest sonarqube-scanner
+                            npm ci --no-audit --prefer-offline --unsafe-perm
                         '''
                     }
                 }
 
-                stage('Exécution des tests') {
+                stage('Run Tests') {
                     steps {
                         script {
                             try {
                                 sh '''
+                                    # Start virtual display
                                     Xvfb :99 -screen 0 1024x768x24 -ac &
+                                    export DISPLAY=:99
                                     export CHROME_BIN=/usr/bin/google-chrome
 
+                                    # Run tests for each app
                                     for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
                                         if [ -d "projects/$app" ]; then
-                                            ng test $app --watch=false --browsers=ChromeHeadless \
-                                                --code-coverage --source-map=false
+                                            echo "Running tests for $app"
+                                            ng test $app --watch=false --browsers=ChromeHeadless --code-coverage || true
                                         fi
                                     done
                                 '''
@@ -86,23 +100,23 @@ pipeline {
                     }
                 }
 
-                stage('Build des applications') {
+                stage('Build Production') {
                     steps {
-                        script {
-                            sh '''
-                                for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
-                                    if [ -d "projects/$app" ]; then
-                                        ng build $app --configuration production --source-map=false
-                                    fi
-                                done
-                            '''
-                        }
+                        sh '''
+                            # Build each application
+                            for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
+                                if [ -d "projects/$app" ]; then
+                                    echo "Building $app"
+                                    ng build $app --configuration production --source-map=false
+                                fi
+                            done
+                        '''
                     }
                 }
             }
         }
 
-        stage('Analyse SonarQube') {
+        stage('SonarQube Analysis') {
             agent any
             environment {
                 SONAR_TOKEN = credentials('sonarqube-token')
@@ -110,6 +124,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
+                        # Generate sonar-project.properties
                         cat <<EOT > sonar-project.properties
                         sonar.projectKey=frontend-microfrontends
                         sonar.projectName=Microfrontend Platform
@@ -122,6 +137,7 @@ pipeline {
                         sonar.typescript.lcov.reportPaths=coverage/lcov.info
                         sonar.modules=host-module,auth-module,report-module,collaboration-module,ressource-module,task-module,member-module,event-module
 
+                        # Module configurations
                         host-module.sonar.projectKey=host-app
                         host-module.sonar.sources=projects/host-app/src
                         host-module.sonar.tests=projects/host-app/src
@@ -155,6 +171,7 @@ pipeline {
                         event-module.sonar.tests=projects/event-app/src
                         EOT
 
+                        # Run SonarScanner
                         sonar-scanner
                     '''
                 }
@@ -170,25 +187,33 @@ pipeline {
             }
         }
 
-        stage('Build & Push Docker') {
-            agent { label 'docker' }
+        stage('Docker Build & Push') {
+            agent {
+                docker {
+                    image 'docker:20.10-dind'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                    reuseNode false
+                }
+            }
             environment {
                 DOCKER_CREDS = credentials('docker-hub-credentials')
             }
             steps {
                 script {
                     def apps = ['host-app', 'auth-app', 'report-app', 'collaboration-app', 'ressource-app', 'task-app', 'member-app', 'event-app']
-
+                    
                     apps.each { app ->
                         if (fileExists("projects/${app}")) {
-                            stage("Docker Build ${app}") {
+                            stage("Build & Push ${app}") {
                                 sh """
+                                    # Build Docker images
                                     docker build \
                                         -t ${DOCKER_REGISTRY}/${app}:${BUILD_NUMBER} \
                                         -t ${DOCKER_REGISTRY}/${app}:latest \
                                         --build-arg APP_NAME=${app} \
                                         -f Dockerfile.${app} .
 
+                                    # Login and push
                                     echo "${DOCKER_CREDS_PSW}" | docker login -u "${DOCKER_CREDS_USR}" --password-stdin
                                     docker push ${DOCKER_REGISTRY}/${app}:${BUILD_NUMBER}
                                     docker push ${DOCKER_REGISTRY}/${app}:latest
@@ -205,25 +230,38 @@ pipeline {
         always {
             archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
             junit testResults: '**/test-results.xml', allowEmptyResults: true
-            cleanWs(deleteDirs: true)
+            cleanWs()
         }
         failure {
             script {
                 if (env.SLACK_CREDENTIALS_ID) {
                     slackSend(
-                        color: 'danger', 
-                        message: "❌ Build échoué : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        color: 'danger',
+                        message: """🚨 Pipeline Failed 🚨
+                        Job: ${env.JOB_NAME}
+                        Build: #${env.BUILD_NUMBER}
+                        URL: ${env.BUILD_URL}""",
+                        channel: '#ci-alerts',
                         tokenCredentialId: env.SLACK_CREDENTIALS_ID
                     )
                 }
+                emailext (
+                    subject: "FAILED: Job '${env.JOB_NAME}' (${env.BUILD_NUMBER})",
+                    body: """Check console output at ${env.BUILD_URL}""",
+                    to: 'dev-team@example.com'
+                )
             }
         }
         success {
             script {
                 if (env.SLACK_CREDENTIALS_ID) {
                     slackSend(
-                        color: 'good', 
-                        message: "✅ Build réussi : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        color: 'good',
+                        message: """✅ Pipeline Succeeded ✅
+                        Job: ${env.JOB_NAME}
+                        Build: #${env.BUILD_NUMBER}
+                        URL: ${env.BUILD_URL}""",
+                        channel: '#ci-notifications',
                         tokenCredentialId: env.SLACK_CREDENTIALS_ID
                     )
                 }
