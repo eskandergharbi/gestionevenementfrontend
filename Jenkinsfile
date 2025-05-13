@@ -68,7 +68,7 @@ pipeline {
                     steps {
                         sh '''
                             npm install -g @angular/cli@latest sonarqube-scanner
-                            npm ci --no-audit --prefer-offline --unsafe-perm
+                            sh 'npm install'  
                         '''
                     }
                 }
