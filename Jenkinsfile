@@ -65,8 +65,7 @@ pipeline {
                 }
 
                 stage('Install Dependencies') {
-                    steps {
-                        
+                    steps {                      
                         sh 'npm install -g @angular/cli@latest sonarqube-scanner'
                         sh 'npm install'  
                         
