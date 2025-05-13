@@ -391,10 +391,10 @@
 							"projects/ressource-app/src/favicon.ico",
 							"projects/ressource-app/src/assets"
 						],
-		"styles": [
-			"node_modules/primeicons/primeicons.css",
-			"node_modules/primeflex/primeflex.css"
-],
+						"styles": [
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
+						],
 						"scripts": []
 					},
 					"configurations": {
@@ -452,8 +452,7 @@
 							"projects/ressource-app/src/favicon.ico",
 							"projects/ressource-app/src/assets"
 						],
-						"styles": [
-													],
+						"styles": [],
 						"scripts": []
 					}
 				}
@@ -574,7 +573,7 @@
 						],
 						"styles": [
 							"node_modules/primeicons/primeicons.css",
-							"node_modules/primeflex/primeflex.css"	
+							"node_modules/primeflex/primeflex.css"
 						],
 						"scripts": [],
 						"main": "projects/event-app/src/main.ts",
@@ -643,7 +642,7 @@
 						],
 						"styles": [
 							"node_modules/primeicons/primeicons.css",
-							"node_modules/primeflex/primeflex.css"	
+							"node_modules/primeflex/primeflex.css"
 						],
 						"scripts": []
 					}
@@ -671,8 +670,8 @@
 							"projects/member-app/src/assets"
 						],
 						"styles": [
-					"node_modules/primeicons/primeicons.css",
-			"node_modules/primeflex/primeflex.css"
+							"node_modules/primeicons/primeicons.css",
+							"node_modules/primeflex/primeflex.css"
 						],
 						"scripts": [],
 						"main": "projects/member-app/src/main.ts",
@@ -743,7 +742,8 @@
 						],
 						"styles": [
 							"node_modules/primeicons/primeicons.css",
-							"node_modules/primeflex/primeflex.css"						],
+							"node_modules/primeflex/primeflex.css"
+						],
 						"scripts": []
 					}
 				}
