@@ -28,7 +28,7 @@ pipeline {
             agent {
                 docker {
                     image 'node:18-bullseye'
-                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix --user root' // Added --user root
+                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix --user root'
                     reuseNode true
                 }
             }
@@ -37,7 +37,6 @@ pipeline {
                 stage('Installation de Chrome') {
                     steps {
                         sh '''
-                            # Run as root in container
                             apt-get update && apt-get install -y --no-install-recommends \
                                 wget gnupg xvfb libgconf-2-4 libxtst6 libxss1 \
                                 libnss3 libasound2 fonts-liberation curl
@@ -64,14 +63,12 @@ pipeline {
                             try {
                                 sh '''
                                     Xvfb :99 -screen 0 1024x768x24 -ac &
-
                                     export CHROME_BIN=/usr/bin/google-chrome
 
                                     for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
                                         if [ -d "projects/$app" ]; then
                                             ng test $app --watch=false --browsers=ChromeHeadless \
-                                                --code-coverage --source-map=false \
-                                                --no-sandbox --disable-gpu --disable-dev-shm-usage || true
+                                                --code-coverage --source-map=false
                                         fi
                                     done
                                 '''
@@ -84,13 +81,15 @@ pipeline {
 
                 stage('Build des applications') {
                     steps {
-                        sh '''
-                            for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
-                                if [ -d "projects/$app" ]; then
-                                    ng build $app --configuration production --source-map=false
-                                fi
-                            done
-                        '''
+                        script {
+                            sh '''
+                                for app in host-app auth-app report-app collaboration-app ressource-app task-app member-app event-app; do
+                                    if [ -d "projects/$app" ]; then
+                                        ng build $app --configuration production --source-map=false
+                                    fi
+                                done
+                            '''
+                        }
                     }
                 }
             }
@@ -197,10 +196,19 @@ pipeline {
 
     post {
         always {
-            node('built-in') {  // Changed from 'master' to 'built-in' or your specific node label
-                archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
-                junit '**/test-results.xml'
-                cleanWs(deleteDirs: true)
+            archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
+            junit testResults: '**/test-results.xml', allowEmptyResults: true
+            cleanWs(deleteDirs: true)
+        }
+        failure {
+            script {
+                if (env.SLACK_CREDENTIALS_ID) {
+                    slackSend(
+                        color: 'danger', 
+                        message: "❌ Build échoué : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        tokenCredentialId: env.SLACK_CREDENTIALS_ID
+                    )
+                }
             }
         }
         success {
@@ -209,17 +217,6 @@ pipeline {
                     slackSend(
                         color: 'good', 
                         message: "✅ Build réussi : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                        tokenCredentialId: env.SLACK_CREDENTIALS_ID
-                    )
-                }
-            }
-        }
-        failure {
-            script {
-                if (env.SLACK_CREDENTIALS_ID) {
-                    slackSend(
-                        color: 'danger', 
-                        message: "❌ Build échoué : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                         tokenCredentialId: env.SLACK_CREDENTIALS_ID
                     )
                 }
