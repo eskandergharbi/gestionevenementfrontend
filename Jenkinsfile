@@ -5,8 +5,8 @@ pipeline {
         CHROME_BIN = '/usr/bin/google-chrome'
         DISPLAY = ':99'
         NG_CLI_ANALYTICS = 'false'
-        DOCKER_REGISTRY = 'eskandergharbi' // Remplacez par votre namespace Docker Hub
-        SONARQUBE_URL = 'http://sonarqube:9200' // À adapter selon votre configuration
+        DOCKER_REGISTRY = 'eskandergharbi'
+        SONARQUBE_URL = 'http://sonarqube:9200'
     }
 
     stages {
@@ -196,7 +196,7 @@ pipeline {
 
     post {
         always {
-            node {
+            node('master') {
                 archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
                 junit '**/test-results.xml'
                 cleanWs(deleteDirs: true)
