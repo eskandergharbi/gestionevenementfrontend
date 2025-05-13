@@ -1,5 +1,5 @@
 pipeline {
-    agent none
+    agent any
 
     environment {
         CHROME_BIN = '/usr/bin/google-chrome'
@@ -11,7 +11,6 @@ pipeline {
 
     stages {
         stage('Récupération du code') {
-            agent any
             steps {
                 checkout([
                     $class: 'GitSCM',
@@ -29,7 +28,7 @@ pipeline {
             agent {
                 docker {
                     image 'node:18-bullseye'
-                    args '--shm-size=1gb --ipc=shared -v /tmp/.X11-unix:/tmp/.X11-unix'
+                    args '--shm-size=1gb -v /tmp/.X11-unix:/tmp/.X11-unix'
                     reuseNode true
                 }
             }
@@ -124,7 +123,29 @@ pipeline {
                         auth-module.sonar.sources=projects/auth-app/src
                         auth-module.sonar.tests=projects/auth-app/src
 
-                        # Ajouter les autres modules de manière similaire...
+                        report-module.sonar.projectKey=report-app
+                        report-module.sonar.sources=projects/report-app/src
+                        report-module.sonar.tests=projects/report-app/src
+
+                        collaboration-module.sonar.projectKey=collaboration-app
+                        collaboration-module.sonar.sources=projects/collaboration-app/src
+                        collaboration-module.sonar.tests=projects/collaboration-app/src
+
+                        ressource-module.sonar.projectKey=ressource-app
+                        ressource-module.sonar.sources=projects/ressource-app/src
+                        ressource-module.sonar.tests=projects/ressource-app/src
+
+                        task-module.sonar.projectKey=task-app
+                        task-module.sonar.sources=projects/task-app/src
+                        task-module.sonar.tests=projects/task-app/src
+
+                        member-module.sonar.projectKey=member-app
+                        member-module.sonar.sources=projects/member-app/src
+                        member-module.sonar.tests=projects/member-app/src
+
+                        event-module.sonar.projectKey=event-app
+                        event-module.sonar.sources=projects/event-app/src
+                        event-module.sonar.tests=projects/event-app/src
                         EOT
 
                         sonar-scanner
@@ -175,15 +196,33 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
-            junit '**/test-results.xml'
-            cleanWs(deleteDirs: true)
+            node {
+                archiveArtifacts artifacts: '**/dist/**/*, coverage/**/*', allowEmptyArchive: true
+                junit '**/test-results.xml'
+                cleanWs(deleteDirs: true)
+            }
         }
         success {
-            slackSend(color: 'good', message: "✅ Build réussi : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+            script {
+                if (env.SLACK_CREDENTIALS_ID) {
+                    slackSend(
+                        color: 'good', 
+                        message: "✅ Build réussi : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        tokenCredentialId: env.SLACK_CREDENTIALS_ID
+                    )
+                }
+            }
         }
         failure {
-            slackSend(color: 'danger', message: "❌ Build échoué : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+            script {
+                if (env.SLACK_CREDENTIALS_ID) {
+                    slackSend(
+                        color: 'danger', 
+                        message: "❌ Build échoué : Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        tokenCredentialId: env.SLACK_CREDENTIALS_ID
+                    )
+                }
+            }
         }
     }
 }
